@@ -23,8 +23,10 @@ Cargo.lock.bak
 !**/index.html
 **/*_files/
 **/*_cache/
+**/*_ipynb
 _freeze/
 _site/
+.ipynb_checkpoints/
 
 # --- Editor / OS ---
 .vscode/
