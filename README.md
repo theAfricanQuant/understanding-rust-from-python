@@ -2,6 +2,8 @@
 
 A learning journal: **side-by-side Python and Rust**, built from a Pythonista's perspective.
 
+> **First time cloning this repo?** Read [`SETUP.md`](./SETUP.md) for the full step-by-step.
+
 ## Structure
 
 | Folder | What's in it |
@@ -12,27 +14,20 @@ A learning journal: **side-by-side Python and Rust**, built from a Pythonista's 
 | `playground/` | Cargo multi-bin project (`cargo run --bin XX_name`) |
 | `notes/` | Quick markdown notes per topic |
 
-## Quick start
-
-### Python side (uv-managed)
+## Quick start (TL;DR — full guide in [SETUP.md](./SETUP.md))
 
 ```bash
-cd rust-from-python
-uv sync                  # creates .venv and installs everything
-uv run jupyter lab       # or whatever you want
-```
+# Python
+uv sync
+uv run python python/01_hello.py
 
-### Rust side (cargo)
+# Rust via cargo
+cd playground && cargo run --bin 01_hello && cd ..
 
-```bash
-cd playground
-cargo run --bin 01_hello
-cargo run --bin 02_vars
-```
+# Rust standalone
+rustc rust/01_hello.rs -o /tmp/h && /tmp/h
 
-### Render the lesson document
-
-```bash
+# Render the doc
 quarto render learn-rust.qmd --to html
 ```
 
