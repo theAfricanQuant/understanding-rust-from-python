@@ -35,8 +35,8 @@ quarto render learn-rust.qmd --to html
 
 | # | Topic | Date | Status |
 |---|---|---|---|
-| 01 | Hello world | 2026-06-05 | ✅ done |
-| 02 | Variables (`let`, `mut`, types, shadowing, `const`) | 2026-06-05 | ✅ done |
+| 01 | Hello world | 5th June, 2026 | ✅ done |
+| 02 | Variables (`let`, `mut`, types, shadowing, `const`) | 5th June, 2026 | ✅ done |
 | 03 | Functions | — | ⬜ pending |
 | 04 | Control flow | — | ⬜ pending |
 | 05 | Loops | — | ⬜ pending |

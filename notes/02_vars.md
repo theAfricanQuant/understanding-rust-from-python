@@ -1,6 +1,7 @@
 ---
 topic: "Variables & Mutability"
 date_completed: 2026-06-05
+date_display: "5th June, 2026"
 status: done
 rustlings_source: "exercises/01_variables/variables1.rs through variables6.rs"
 ---

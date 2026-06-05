@@ -1,6 +1,6 @@
 # Lesson 02 — Variables
 
-**Completed:** 2026-06-05 · **Status:** done
+**Completed:** 5th June, 2026 · **Status:** done
 
 Quick reference. Full lesson: `../../learn-rust.qmd` (lesson 02).
 

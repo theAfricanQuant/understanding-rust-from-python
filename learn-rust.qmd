@@ -26,7 +26,7 @@ The exercises are adapted from [rustlings](https://github.com/rust-lang/rustling
 
 # Lesson 01 — Hello World
 
-**Completed:** 2026-06-05 · **rustlings source:** `exercises/00_intro/intro1.rs`, `intro2.rs`
+**Completed:** 5th June, 2026 · **rustlings source:** `exercises/00_intro/intro1.rs`, `intro2.rs`
 
 ## Concept
 Every program needs an entry point. Python runs top-to-bottom. Rust needs an explicit `main` function.
@@ -105,7 +105,7 @@ rustc /home/siseng/Documents/programing_languages/Rust/learn/rust/01_hello.rs -o
 
 # Lesson 02 — Variables
 
-**Completed:** 2026-06-05 · **rustlings source:** `exercises/01_variables/variables1.rs` through `variables6.rs`
+**Completed:** 5th June, 2026 · **rustlings source:** `exercises/01_variables/variables1.rs` through `variables6.rs`
 
 ## Concept
 Variables store values. In Python, variables are dynamic. In Rust, they're typed and **immutable by default**.

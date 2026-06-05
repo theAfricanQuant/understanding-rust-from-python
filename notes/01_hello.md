@@ -1,6 +1,7 @@
 ---
 topic: "Hello World"
 date_completed: 2026-06-05
+date_display: "5th June, 2026"
 status: done
 rustlings_source: "exercises/00_intro/intro1.rs, intro2.rs"
 ---
