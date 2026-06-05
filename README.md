@@ -13,6 +13,7 @@ A learning journal: **side-by-side Python and Rust**, built from a Pythonista's 
 | `rust/` | Plain `.rs` files (compile with `rustc`) |
 | `playground/` | Cargo multi-bin project (`cargo run --bin XX_name`) |
 | `notes/` | Quick markdown notes per topic |
+| `SETUP.md` | First-time-clone instructions |
 
 ## Quick start (TL;DR — full guide in [SETUP.md](./SETUP.md))
 

@@ -101,6 +101,8 @@ rustc rust/01_hello.rs -o /tmp/01_hello
 /tmp/01_hello
 ```
 
+> **What do those commands actually do?** See [`notes/running-rust.md`](./notes/running-rust.md) for a full breakdown of `cargo` vs `rustc`, with Python parallels for each piece.
+
 ---
 
 ## 5. Render the side-by-side doc

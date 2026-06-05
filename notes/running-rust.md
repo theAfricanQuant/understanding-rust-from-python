@@ -1,0 +1,110 @@
+---
+topic: "Running Rust code — cargo vs rustc"
+date_added: 2026-06-05
+status: reference
+---
+
+# Running Rust code
+
+Two ways to run a `.rs` file in this project. Pick based on which file.
+
+## TL;DR — your go-to command
+
+```bash
+cd /home/siseng/Documents/programing_languages/Rust/rust-from-python/playground
+cargo run --bin 02_vars
+```
+
+That's 99% of what you'll type.
+
+---
+
+## Command 1: `cargo run --bin 02_vars`
+
+For files in `playground/src/bin/XX.rs`.
+
+| Piece | What it means | Python parallel |
+|---|---|---|
+| `cargo` | Rust's package manager + build tool | like `pip` + `python -m` combined |
+| `run` | "Compile, then execute" | like `python script.py` but with a compile step |
+| `--bin` | "Run a binary, not a library" | specifying a script to run |
+| `02_vars` | The binary's name | the script name |
+
+**What cargo does, in order:**
+
+1. **Reads `Cargo.toml`** — the project manifest (like `pyproject.toml`)
+2. **Finds `src/bin/02_vars.rs`** based on the `[[bin]]` entries in `Cargo.toml`
+3. **Compiles it** — turns source code into a binary
+4. **Runs the binary** — executes the compiled program
+5. **Prints the output** to your terminal
+
+**Speed note:**
+- First run: `Compiling playground v0.1.0` → 5–10 seconds
+- Subsequent runs: `Finished` → instant
+- The compiled binary lives at `target/debug/02_vars`
+
+**Python parallel:**
+```bash
+# Python:
+python my_project/02_vars.py
+
+# Rust:
+cargo run --bin 02_vars
+```
+
+---
+
+## Command 2: `rustc file.rs -o /tmp/x && /tmp/x`
+
+For files in `rust/XX.rs`. Two commands chained with `&&`.
+
+### Part A — compile: `rustc rust/01_hello.rs -o /tmp/h`
+
+| Piece | What it means |
+|---|---|
+| `rustc` | The Rust **compiler** (not the package manager) |
+| `rust/01_hello.rs` | Source file to compile |
+| `-o /tmp/h` | "Output the binary to `/tmp/h`" |
+| `&&` | Shell: "only run next if this one succeeded" |
+
+**What `rustc` does:** Reads ONE `.rs` file, compiles it, produces a binary. No project, no `Cargo.toml`, no dependencies. Just source in, binary out.
+
+### Part B — run: `/tmp/h`
+
+Just executes the compiled binary, like running any program.
+
+**Python parallel for the whole thing:**
+```bash
+# Python doesn't compile, so no direct equivalent.
+# Closest mental model: PyInstaller — turn .py into an .exe, then run the .exe
+rustc file.rs -o /tmp/h   # like pyinstaller
+/tmp/h                     # like running the resulting binary
+```
+
+---
+
+## Why two ways exist
+
+| | `cargo run --bin XX` | `rustc file.rs && ./file` |
+|---|---|---|
+| Use case | Real project, multiple files, libraries | Quick experiment, single file |
+| Project structure required? | Yes (Cargo.toml) | No |
+| Compile time | First slow, then instant | Every time |
+| External libraries (crates)? | ✅ Yes | ❌ No |
+| Closest Python equivalent | `python -m my_module` | None (Python is interpreted) |
+
+---
+
+## When to use which
+
+- **Lesson files** (in `playground/src/bin/`) → use `cargo run --bin XX`
+- **Quick scribble in `rust/`** → use `rustc file.rs -o /tmp/x && /tmp/x`
+- **Trying someone else's code** → use `rustc` (one-off, no project setup)
+- **Anything with external libraries** → must use `cargo` (it manages dependencies)
+
+---
+
+## See also
+
+- `SETUP.md` — first-time setup, including the `cd` to `playground/`
+- `learn-rust.qmd` — the side-by-side lessons that use these commands
