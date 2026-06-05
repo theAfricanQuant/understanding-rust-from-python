@@ -1,3 +1,10 @@
+---
+topic: "Hello World"
+date_completed: 2026-06-05
+status: done
+rustlings_source: "exercises/00_intro/intro1.rs, intro2.rs"
+---
+
 # Lesson 01 — Hello World
 
 | Python | Rust |
@@ -12,11 +19,7 @@ The `!` in `println!` means it's a **macro**, not a function. (You'll learn why 
 
 ## Run it
 ```bash
-cd /home/siseng/Documents/programing_languages/Rust/playground
-cargo run --bin 01_hello
-```
-
-Or the Python version:
-```bash
-python3 python/01_hello.py
+cd /home/siseng/Documents/programing_languages/Rust/rust-from-python
+uv run python python/01_hello.py
+cd playground && cargo run --bin 01_hello
 ```

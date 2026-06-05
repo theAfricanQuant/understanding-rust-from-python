@@ -33,14 +33,16 @@ quarto render learn-rust.qmd --to html
 
 ## Lessons done so far
 
-- [x] **01** — Hello world
-- [x] **02** — Variables (`let`, `mut`, types, shadowing, `const`)
-- [ ] 03 — Functions
-- [ ] 04 — Control flow
-- [ ] 05 — Loops
-- [ ] 06 — Ownership & borrowing
-- [ ] 07 — Structs & enums
-- [ ] 08 — Error handling
+| # | Topic | Date | Status |
+|---|---|---|---|
+| 01 | Hello world | 2026-06-05 | ✅ done |
+| 02 | Variables (`let`, `mut`, types, shadowing, `const`) | 2026-06-05 | ✅ done |
+| 03 | Functions | — | ⬜ pending |
+| 04 | Control flow | — | ⬜ pending |
+| 05 | Loops | — | ⬜ pending |
+| 06 | Ownership & borrowing | — | ⬜ pending |
+| 07 | Structs & enums | — | ⬜ pending |
+| 08 | Error handling | — | ⬜ pending |
 
 ## Why this exists
 

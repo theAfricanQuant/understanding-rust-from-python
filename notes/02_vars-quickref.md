@@ -1,5 +1,7 @@
 # Lesson 02 — Variables
 
+**Completed:** 2026-06-05 · **Status:** done
+
 Quick reference. Full lesson: `../../learn-rust.qmd` (lesson 02).
 
 ## The 5 rules

@@ -1,5 +1,7 @@
 # Lesson 01 — Hello World
 
+**Completed:** 2026-06-05 · **Status:** done
+
 Python equivalent lives in `../python/01_hello.py`.
 Rust standalone (compile with `rustc`) lives in `../rust/01_hello.rs`.
 Rust multi-bin (run with cargo) lives in `../playground/src/bin/01_hello.rs`.
