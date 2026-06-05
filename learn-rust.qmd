@@ -1,0 +1,303 @@
+---
+title: "Learning Rust — A Pythonista's Guide"
+subtitle: "Side-by-side Python and Rust lessons, based on rustlings"
+format:
+  html:
+    code-fold: false
+    code-tools: true
+    toc: true
+    toc-depth: 2
+jupyter: python3
+---
+
+# Preface
+
+This is a side-by-side Python → Rust learning journal. Each lesson shows:
+
+1. **Concept** — what you're learning
+2. **Python** — how you'd do it in Python (familiar)
+3. **Rust** — the equivalent (new)
+4. **Why it's different** — the rule that tripped you up
+5. **Run it** — try the code yourself
+
+The exercises are adapted from [rustlings](https://github.com/rust-lang/rustlings), with Python baselines added.
+
+---
+
+# Lesson 01 — Hello World
+
+**rustlings source:** `exercises/00_intro/intro1.rs`, `intro2.rs`
+
+## Concept
+Every program needs an entry point. Python runs top-to-bottom. Rust needs an explicit `main` function.
+
+## Python
+```python
+print("Hello world!")
+```
+
+That's it. Python looks for the file and runs it.
+
+## Rust
+```rust
+fn main() {
+    println!("Hello world!");
+}
+```
+
+**Three things to notice:**
+
+1. `fn main() { ... }` — every Rust binary starts here. The `fn` keyword defines a function.
+2. `println!` has a **`!`** — it's a **macro**, not a function. You'll learn the difference later. For now: `println!` is print, `print!` is print without newline.
+3. Every statement ends with **`;`**.
+
+## rustlings intro2 — the first "bug"
+
+The original file has a typo:
+```rust
+// exercises/00_intro/intro2.rs  (the broken version)
+fn main() {
+    printline!("Hello world!");   // ❌ typo
+}
+```
+
+**The compiler error teaches you:**
+```
+error: cannot find macro `printline` in this scope
+help: a macro with a similar name exists
+  |
+3 -     printline!("Hello world!");
+3 +     println!("Hello world!");
+```
+
+**Fix:** rename `printline!` → `println!`. Save. Re-run.
+
+## Why this matters in Rust
+In Python, the interpreter tries to be helpful when you misspell — sometimes. In Rust, the **compiler** is your teacher. **Read the error message top to bottom.** It almost always tells you the fix.
+
+## Run it
+
+:::: {.columns}
+::: {.column width="50%"}
+**Python**
+```bash
+mkdir -p /home/siseng/Documents/programing_languages/Rust/learn/python
+echo 'print("Hello world!")' > /home/siseng/Documents/programing_languages/Rust/learn/python/01_hello.py
+python3 /home/siseng/Documents/programing_languages/Rust/learn/python/01_hello.py
+```
+:::
+::: {.column width="50%"}
+**Rust**
+```bash
+mkdir -p /home/siseng/Documents/programing_languages/Rust/learn/rust
+cat > /home/siseng/Documents/programing_languages/Rust/learn/rust/01_hello.rs <<'EOF'
+fn main() {
+    println!("Hello world!");
+}
+EOF
+rustc /home/siseng/Documents/programing_languages/Rust/learn/rust/01_hello.rs -o /tmp/01_hello
+/tmp/01_hello
+```
+:::
+::::
+
+---
+
+# Lesson 02 — Variables
+
+**rustlings source:** `exercises/01_variables/variables1.rs` through `variables6.rs`
+
+## Concept
+Variables store values. In Python, variables are dynamic. In Rust, they're typed and **immutable by default**.
+
+## Python
+```python
+x = 5
+print(x)
+
+x = 10       # perfectly fine — re-bind
+print(x)
+
+y: int = 7   # type hints are optional, not enforced at runtime
+print(y)
+```
+
+## Rust
+```rust
+fn main() {
+    let x = 5;
+    println!("x = {x}");
+
+    // x = 10;   // ❌ ERROR: cannot assign twice to immutable variable
+
+    let mut y = 5;   // `mut` makes it mutable
+    println!("y = {y}");
+    y = 10;          // OK now
+    println!("y = {y}");
+
+    let z: i32 = 7;  // explicit type annotation
+    println!("z = {z}");
+}
+```
+
+## The 5 rules of Rust variables
+
+| Rule | Python | Rust |
+|---|---|---|
+| Declare | `x = 5` | `let x = 5;` |
+| Mutate | `x = 10` (always allowed) | `let mut x = 5;` (explicit opt-in) |
+| Type | dynamic, figured out at runtime | static, inferred or annotated |
+| Reassign | rebind freely | shadow with `let` (creates a *new* variable) |
+| Constants | `PI = 3.14` (convention only) | `const PI: f64 = 3.14;` (truly constant, typed) |
+
+## rustlings variables1 — fix the `let`
+
+```rust
+// exercises/01_variables/variables1.rs
+fn main() {
+    x = 5;        // ❌ no `let`
+    println!("x has the value {x}");
+}
+```
+
+**Fix:** add `let` before `x`.
+
+## rustlings variables2 — types must be known
+
+```rust
+// exercises/01_variables/variables2.rs
+fn main() {
+    let x;            // declared but not assigned
+    if x == 10 {      // ❌ compiler doesn't know x's type
+        println!("x is ten!");
+    } else {
+        println!("x is not ten!");
+    }
+}
+```
+
+**Two ways to fix:**
+
+1. Declare with a type: `let x: i32;` then assign before use
+2. Declare and assign in one go: `let x = 10;` (or any value)
+
+**Compiler error you'll see:**
+```
+error[E0283]: type annotations needed
+error[E0381]: used binding `x` isn't initialized
+```
+
+## rustlings variables3 — shadowing
+
+```rust
+// exercises/01_variables/variables3.rs
+fn main() {
+    let x: i32 = 10;
+    {
+        let x: i32 = 20;  // shadows the outer x
+        println!("inner x = {x}");  // 20
+    }
+    println!("outer x = {x}");  // 10
+}
+```
+
+**Shadowing** in Rust = declaring a new variable with the same name. The inner `x` lives only in the inner scope `{}`. This is *not* mutation — it's a fresh binding.
+
+Python equivalent: nothing direct. Closest is function scope:
+```python
+def outer():
+    x = 10
+    def inner():
+        x = 20      # this is a new local in inner
+        print(x)
+    inner()
+    print(x)         # still 10
+outer()
+```
+
+## rustlings variables5 — printing without `{}`
+
+```rust
+// exercises/01_variables/variables5.rs
+fn main() {
+    let number = 3;
+    println!("number is {number}");     // named capture
+    println!("{number} is the answer"); // works anywhere
+}
+```
+
+The `{number}` syntax is **Rust 1.58+ named capture**. Same idea as Python's f-string `{number}`.
+
+## rustlings variables6 — constants
+
+```rust
+// exercises/01_variables/variables6.rs
+const NUMBER: i32 = 3;          // type REQUIRED, UPPER_SNAKE convention
+fn main() {
+    println!("NUMBER = {NUMBER}");
+}
+```
+
+Constants live for the whole program. Unlike `let`, they can be declared in global scope.
+
+## Why Rust does this
+
+**Safety.** In Python, you can accidentally rebind a variable, shadow a builtin, or change a "constant". In Rust:
+- `let` is the default → most variables can't change accidentally
+- `mut` is explicit → when mutation happens, it's visible at the declaration
+- Types are checked at compile time → no `TypeError` at runtime
+
+The cost: you write a bit more. The benefit: the compiler catches bugs Python would catch (or miss) at runtime.
+
+## Run it
+
+:::: {.columns}
+::: {.column width="50%"}
+**Python**
+```bash
+cat > /tmp/02_vars.py <<'EOF'
+x = 5
+print(f"x = {x}")
+x = 10
+print(f"x = {x}")
+
+y: int = 7
+print(f"y = {y}")
+EOF
+python3 /tmp/02_vars.py
+```
+:::
+::: {.column width="50%"}
+**Rust**
+```bash
+cat > /tmp/02_vars.rs <<'EOF'
+fn main() {
+    let x = 5;
+    println!("x = {x}");
+
+    let mut y = 5;
+    println!("y = {y}");
+    y = 10;
+    println!("y = {y}");
+
+    let z: i32 = 7;
+    println!("z = {z}");
+}
+EOF
+rustc /tmp/02_vars.rs -o /tmp/02_vars && /tmp/02_vars
+```
+:::
+::::
+
+---
+
+# Next up
+
+Once you've done 01 and 02, lessons 03+ will cover:
+
+- **03 — Functions** (`def` vs `fn`, return values, type signatures)
+- **04 — If / else** (very similar to Python, but no truthy/falsy)
+- **05 — Loops** (`for i in range(10)` vs `for i in 0..10`)
+- **06 — Ownership & borrowing** (the famous Rust thing Python doesn't have)
+- **07 — Structs & enums** (like `@dataclass` and `Enum`, but more powerful)
+- **08 — Error handling** (`try/except` vs `Result<T, E>`)
