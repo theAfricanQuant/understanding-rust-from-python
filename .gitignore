@@ -21,6 +21,8 @@ Cargo.lock.bak
 .quarto/
 **/*.html
 !**/index.html
+**/*_files/
+**/*_cache/
 _freeze/
 _site/
 
