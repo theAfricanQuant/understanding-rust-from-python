@@ -10,3 +10,7 @@ path = "src/bin/01_hello.rs"
 [[bin]]
 name = "02_vars"
 path = "src/bin/02_vars.rs"
+
+[[bin]]
+name = "03_functions"
+path = "src/bin/03_functions.rs"
