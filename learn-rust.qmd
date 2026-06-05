@@ -32,14 +32,14 @@ The exercises are adapted from [rustlings](https://github.com/rust-lang/rustling
 Every program needs an entry point. Python runs top-to-bottom. Rust needs an explicit `main` function.
 
 ## Python
-```python
+```{python}
 print("Hello world!")
 ```
 
 That's it. Python looks for the file and runs it.
 
 ## Rust
-```rust
+```{rust}
 fn main() {
     println!("Hello world!");
 }
@@ -54,7 +54,7 @@ fn main() {
 ## rustlings intro2 — the first "bug"
 
 The original file has a typo:
-```rust
+```{rust}
 // exercises/00_intro/intro2.rs  (the broken version)
 fn main() {
     printline!("Hello world!");   // ❌ typo
@@ -80,7 +80,7 @@ In Python, the interpreter tries to be helpful when you misspell — sometimes. 
 :::: {.columns}
 ::: {.column width="50%"}
 **Python**
-```bash
+```{bash}
 mkdir -p /home/siseng/Documents/programing_languages/Rust/learn/python
 echo 'print("Hello world!")' > /home/siseng/Documents/programing_languages/Rust/learn/python/01_hello.py
 python3 /home/siseng/Documents/programing_languages/Rust/learn/python/01_hello.py
@@ -88,7 +88,7 @@ python3 /home/siseng/Documents/programing_languages/Rust/learn/python/01_hello.p
 :::
 ::: {.column width="50%"}
 **Rust**
-```bash
+```{bash}
 mkdir -p /home/siseng/Documents/programing_languages/Rust/learn/rust
 cat > /home/siseng/Documents/programing_languages/Rust/learn/rust/01_hello.rs <<'EOF'
 fn main() {
@@ -111,7 +111,7 @@ rustc /home/siseng/Documents/programing_languages/Rust/learn/rust/01_hello.rs -o
 Variables store values. In Python, variables are dynamic. In Rust, they're typed and **immutable by default**.
 
 ## Python
-```python
+```{python}
 x = 5
 print(x)
 
@@ -123,7 +123,7 @@ print(y)
 ```
 
 ## Rust
-```rust
+```{rust}
 fn main() {
     let x = 5;
     println!("x = {x}");
@@ -152,7 +152,7 @@ fn main() {
 
 ## rustlings variables1 — fix the `let`
 
-```rust
+```{rust}
 // exercises/01_variables/variables1.rs
 fn main() {
     x = 5;        // ❌ no `let`
@@ -164,7 +164,7 @@ fn main() {
 
 ## rustlings variables2 — types must be known
 
-```rust
+```{rust}
 // exercises/01_variables/variables2.rs
 fn main() {
     let x;            // declared but not assigned
@@ -189,7 +189,7 @@ error[E0381]: used binding `x` isn't initialized
 
 ## rustlings variables3 — shadowing
 
-```rust
+```{rust}
 // exercises/01_variables/variables3.rs
 fn main() {
     let x: i32 = 10;
@@ -204,7 +204,7 @@ fn main() {
 **Shadowing** in Rust = declaring a new variable with the same name. The inner `x` lives only in the inner scope `{}`. This is *not* mutation — it's a fresh binding.
 
 Python equivalent: nothing direct. Closest is function scope:
-```python
+```{python}
 def outer():
     x = 10
     def inner():
@@ -217,7 +217,7 @@ outer()
 
 ## rustlings variables5 — printing without `{}`
 
-```rust
+```{rust}
 // exercises/01_variables/variables5.rs
 fn main() {
     let number = 3;
@@ -230,7 +230,7 @@ The `{number}` syntax is **Rust 1.58+ named capture**. Same idea as Python's f-s
 
 ## rustlings variables6 — constants
 
-```rust
+```{rust}
 // exercises/01_variables/variables6.rs
 const NUMBER: i32 = 3;          // type REQUIRED, UPPER_SNAKE convention
 fn main() {
@@ -255,7 +255,7 @@ The cost: you write a bit more. The benefit: the compiler catches bugs Python wo
 :::: {.columns}
 ::: {.column width="50%"}
 **Python**
-```bash
+```{bash}
 cat > /tmp/02_vars.py <<'EOF'
 x = 5
 print(f"x = {x}")
@@ -270,7 +270,7 @@ python3 /tmp/02_vars.py
 :::
 ::: {.column width="50%"}
 **Rust**
-```bash
+```{bash}
 cat > /tmp/02_vars.rs <<'EOF'
 fn main() {
     let x = 5;

@@ -32,7 +32,7 @@
         "\n",
         "# Lesson 01 — Hello World\n",
         "\n",
-        "**rustlings source:** `exercises/00_intro/intro1.rs`, `intro2.rs`\n",
+        "**Completed:** 5th June, 2026 · **rustlings source:** `exercises/00_intro/intro1.rs`, `intro2.rs`\n",
         "\n",
         "## Concept\n",
         "Every program needs an entry point. Python runs top-to-bottom. Rust needs an explicit `main` function.\n",
@@ -111,7 +111,7 @@
         "\n",
         "# Lesson 02 — Variables\n",
         "\n",
-        "**rustlings source:** `exercises/01_variables/variables1.rs` through `variables6.rs`\n",
+        "**Completed:** 5th June, 2026 · **rustlings source:** `exercises/01_variables/variables1.rs` through `variables6.rs`\n",
         "\n",
         "## Concept\n",
         "Variables store values. In Python, variables are dynamic. In Rust, they're typed and **immutable by default**.\n",
@@ -249,6 +249,7 @@
         "## Why Rust does this\n",
         "\n",
         "**Safety.** In Python, you can accidentally rebind a variable, shadow a builtin, or change a \"constant\". In Rust:\n",
+        "\n",
         "- `let` is the default → most variables can't change accidentally\n",
         "- `mut` is explicit → when mutation happens, it's visible at the declaration\n",
         "- Types are checked at compile time → no `TypeError` at runtime\n",
@@ -308,7 +309,7 @@
         "- **07 — Structs & enums** (like `@dataclass` and `Enum`, but more powerful)\n",
         "- **08 — Error handling** (`try/except` vs `Result<T, E>`)"
       ],
-      "id": "c976ef11"
+      "id": "c0815975"
     }
   ],
   "metadata": {
