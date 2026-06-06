@@ -23,6 +23,16 @@ rustlings_source: "exercises/02_functions/functions1.rs through functions5.rs"
 
 A function is a named block of code. You already know this. The differences between Python and Rust are in the **shape** of the definition, the **return semantics**, and the **type system**.
 
+### Why use functions?
+
+(From the basics, worth keeping in mind)
+
+- **Organize your code** — group related operations under a name
+- **Avoid repeating yourself** — write once, call many times
+- **Make your programs easier to read and change** — a well-named function is a one-line summary of what it does
+
+These three reasons are the same in Python and Rust. Rust just adds stricter rules about *how* you write them.
+
 ---
 
 ## 1. The anatomy of a function
@@ -68,6 +78,32 @@ fn add(a: i32, b: i32) -> i32 {
 3. **Parameter types are mandatory**, not optional hints
 4. **Return type after `->` is mandatory**, not a hint
 5. **Statements end with `;`, expressions don't** — and that single character changes everything
+
+### Naming convention — `snake_case` (Rust idiom)
+
+Rust has a hard convention on function naming: **lowercase, with underscores between words**. This is checked by `clippy` (Rust's linter) and is considered idiomatic. It's not enforced by the compiler, but the Rust community will read your code and notice.
+
+```rust
+// ✅ idiomatic
+fn calculate_score() {}
+fn print_summary() {}
+fn to_lowercase() {}
+
+// ❌ would compile, but clippy warns and other devs will frown
+fn CalculateScore() {}    // PascalCase → looks like a type/constructor
+fn printSummary() {}      // camelCase → fine in JS, not in Rust
+```
+
+Python uses `snake_case` for functions too (PEP 8), so this one is a familiar rule — Python and Rust agree here.
+
+**Other Rust naming conventions you'll meet later:**
+
+| Item | Convention | Example |
+|---|---|---|
+| Functions, variables | `snake_case` | `calculate_score` |
+| Types, structs, enums, traits | `UpperCamelCase` | `Rectangle`, `HashMap` |
+| Constants, statics | `SCREAMING_SNAKE_CASE` | `MAX_POINTS` |
+| Crates | `kebab-case` (in `Cargo.toml`) | `my-crate` |
 
 ---
 
@@ -208,6 +244,7 @@ fn call_me(num: u8) {     // ← u8 is a small unsigned integer (0..=255)
 ```
 
 **Why mandatory?** Rust is **statically typed**: the compiler must know exactly what kind of value `num` is, at compile time, so it can:
+
 - Generate the right machine code
 - Check that `0..num` (a range) is valid for that type
 - Catch errors like calling `call_me("hello")` before you ship
@@ -448,6 +485,7 @@ print_all(&["a", "b", "c"]);              // pass a slice
 ```
 
 **The trade-off:**
+
 - Python: `*args`/`**kwargs` let a function accept any number of arguments
 - Rust: you pass a **slice** (`&[T]`) or **Vec** (`Vec<T>`) — a single value that holds many things
 
@@ -518,6 +556,39 @@ println!("{}", apply(square, 7));    // 49
 | `this function takes 1 argument but 0 arguments were supplied` | forgot to pass an argument | pass it at the call site |
 | `cannot find function \`foo\` in this scope` | typo or function not defined | define `foo` (in any order) |
 | `expected \`i32\`, found \`&str\`` | wrong argument type | convert: `"3".parse().unwrap()` or change the param type |
+| `not all control paths return a value` | an `if/else` branch is missing a return | add an `else` branch, or change return type to `Option<i32>` |
+| `cannot return value referencing local variable` | trying to return a reference to something that won't live long enough | return an owned value, or restructure (lesson 06: ownership) |
+
+### A concrete example — the empty-body won't compile
+
+From the article: an "obvious" mistake that the compiler catches:
+
+```rust
+fn wrong() -> i32 {
+    // empty body — what does it return?
+}
+```
+
+Compile error:
+```
+error[E0308]: mismatched types
+  --> src/main.rs:2:17
+   |
+2  | fn wrong() -> i32 {
+   |    -----      ^^^ expected `i32`, found `()`
+   |
+   = note: expected type `i32` ()
+help: consider returning a value
+   |
+2  | fn wrong() -> i32 { 0 }
+   |                   ++++
+```
+
+The compiler doesn't just say "wrong" — it tells you **what to do** ("consider returning a value") and even **how** ("`{ 0 }`"). Use that help line.
+
+The fix is to either:
+- Return a real value: `fn wrong() -> i32 { 0 }`
+- Or admit the function returns nothing: `fn wrong() { }` (return type defaults to `()`)
 
 **Always read the error top to bottom.** The first line tells you the rule. The line with `^^^^^^^^` is where. The `help:` line (if any) tells you the fix.
 
@@ -573,7 +644,14 @@ fn square(num: i32) -> i32 {
 
 ---
 
-## 11. What's next
+## 11. Further reading
+
+- **The Rust Book, ch. 3.3** — [How Functions Work](https://doc.rust-lang.org/book/ch03-03-how-functions-work.html). The official source. Short, covers the same ground as this lesson, with `snake_case` and the implicit return.
+- **W3Schools Rust Functions** — https://www.w3schools.com/rust/rust_functions.php. Interactive "Try it Yourself" examples if you want to play in a browser.
+- **Rust by Example, Functions** — https://doc.rust-lang.org/rust-by-example/fn.html. Lots of small examples side by side.
+- **"Rust Functions Explained (2025)"** by Ali Aslam (Medium) — the article that prompted this addendum; good for a 3-minute skim.
+
+## 12. What's next
 
 - **Lesson 04** — Control flow: `if/else` (we've seen it in functions4), `match` (the powerful version of `switch`), and **no truthy/falsy** in Rust
 - **Lesson 05** — Loops: `for`, `while`, `loop`, and the `break` value trick
