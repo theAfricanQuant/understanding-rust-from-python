@@ -27,6 +27,7 @@ Cargo.lock.bak
 _freeze/
 _site/
 .ipynb_checkpoints/
+# Keep .qmd sources (rendered locally to .html, which is gitignored)
 
 # --- Editor / OS ---
 .vscode/

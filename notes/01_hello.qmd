@@ -1,8 +1,19 @@
 ---
+title: "Lesson 01 — Hello World"
+subtitle: "Rust from Python — verbose explainer"
+date: "2026-06-05"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: false
+    code-tools: true
+    embed-resources: true
+    theme: cosmo
 topic: "Hello World"
-date_completed: 2026-06-05
+date_completed: "2026-06-05"
 date_display: "5th June, 2026"
-status: done
+status: "done"
 rustlings_source: "exercises/00_intro/intro1.rs, intro2.rs"
 ---
 

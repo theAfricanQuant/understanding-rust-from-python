@@ -1,7 +1,18 @@
 ---
-topic: "Running Rust code — cargo vs rustc"
-date_added: 2026-06-05
-status: reference
+title: "Running Rust code — cargo vs rustc"
+subtitle: "Rust from Python — tooling reference"
+date: "2026-06-05"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: false
+    code-tools: true
+    embed-resources: true
+    theme: cosmo
+topic: "Running Rust code"
+date_added: "2026-06-05"
+status: "reference"
 ---
 
 # Running Rust code

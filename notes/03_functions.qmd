@@ -1,8 +1,19 @@
 ---
+title: "Lesson 03 — Functions"
+subtitle: "Rust from Python — verbose explainer"
+date: "2026-06-06"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: false
+    code-tools: true
+    embed-resources: true
+    theme: cosmo
 topic: "Functions"
-date_completed: 2026-06-06
+date_completed: "2026-06-06"
 date_display: "6th June, 2026"
-status: done
+status: "done"
 rustlings_source: "exercises/02_functions/functions1.rs through functions5.rs"
 ---
 
