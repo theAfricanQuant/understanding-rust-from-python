@@ -1,0 +1,569 @@
+---
+topic: "Functions"
+date_completed: 2026-06-06
+date_display: "6th June, 2026"
+status: done
+rustlings_source: "exercises/02_functions/functions1.rs through functions5.rs"
+---
+
+# Lesson 03 — Functions
+
+> **Python first, Rust second, side by side, into the weeds.**
+
+A function is a named block of code. You already know this. The differences between Python and Rust are in the **shape** of the definition, the **return semantics**, and the **type system**.
+
+---
+
+## 1. The anatomy of a function
+
+### Python
+
+```python
+def add(a, b):
+    """Return the sum of a and b."""
+    return a + b
+```
+
+| Part | Meaning |
+|---|---|
+| `def` | keyword that starts a function definition |
+| `add` | function name |
+| `(a, b)` | parameter list (no types required) |
+| `"""..."""` | docstring (just a string, but by convention a triple-quoted one at the top) |
+| `return a + b` | explicit return with a value |
+
+### Rust
+
+```rust
+/// Return the sum of a and b.
+fn add(a: i32, b: i32) -> i32 {
+    a + b       // no semicolon! this is the return value
+}
+```
+
+| Part | Meaning |
+|---|---|
+| `///` | doc comment (special — appears in generated docs) |
+| `fn` | keyword that starts a function definition |
+| `add` | function name |
+| `(a: i32, b: i32)` | **typed** parameter list |
+| `-> i32` | **return type — mandatory** |
+| `a + b` | the last expression (no `;`) is implicitly returned |
+
+### The 5 differences that will trip you up
+
+1. **`def` → `fn`**
+2. **No `return` keyword needed** for the last expression
+3. **Parameter types are mandatory**, not optional hints
+4. **Return type after `->` is mandatory**, not a hint
+5. **Statements end with `;`, expressions don't** — and that single character changes everything
+
+---
+
+## 2. The big idea: expressions vs statements
+
+This is the single biggest mental shift from Python to Rust. Let me beat it to death.
+
+### Python
+
+In Python, **every line is a statement**. Functions return `None` unless you explicitly `return` something.
+
+```python
+def add(a, b):
+    a + b            # evaluates a + b, throws the value away, returns None!
+
+result = add(3, 4)   # result is None, not 7
+```
+
+You have to write `return` explicitly or the value disappears.
+
+### Rust
+
+In Rust, almost everything is an **expression** (has a value). The **last expression** in a block is the block's value.
+
+```rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b       // expression, no `;` → this IS the return value
+}
+
+fn broken_add(a: i32, b: i32) -> i32 {
+    a + b;      // statement, has `;` → returns (), not a + b
+}
+```
+
+`broken_add(3, 4)` would give a **compile error** because the function promises to return `i32` but the body returns `()` (the unit type, "nothing").
+
+### The rule of thumb
+
+| What you write | What it is | What happens |
+|---|---|---|
+| `a + b` (no `;`) | expression | has the value `a + b` |
+| `a + b;` (with `;`) | statement | has no value, returns `()` |
+
+In a function whose return type is **not** `()`, the **last line must be an expression (no `;`)** — or you need an explicit `return`.
+
+### You CAN still use `return` (early return)
+
+```rust
+fn classify(n: i32) -> &'static str {
+    if n < 0 {
+        return "negative";    // explicit early return
+    }
+    if n == 0 {
+        return "zero";
+    }
+    "positive"               // implicit return at the end
+}
+```
+
+`return` is fine for early exits. The implicit return is just for the happy path at the bottom.
+
+---
+
+## 3. The 5 rustlings functions, walked through
+
+### functions1 — "Add some function with the name `call_me`"
+
+**The broken file:**
+
+```rust
+fn main() {
+    call_me(); // Don't change this line
+}
+```
+
+**The error:**
+
+```
+error[E0425]: cannot find function `call_me` in this scope
+```
+
+**The fix:** add a function definition above `main` (or below — order doesn't matter in Rust):
+
+```rust
+fn call_me() {
+    println!("I'm called!");
+}
+
+fn main() {
+    call_me();
+}
+```
+
+**Python parallel:**
+
+```python
+def main():
+    call_me()  # NameError: name 'call_me' is not defined
+
+def call_me():
+    print("I'm called!")
+
+main()
+```
+
+Same error in Python (`NameError`), but it fires at **runtime**. In Rust, the compiler catches it before you ever run the program.
+
+**Rust quirk:** functions can be defined in any order, even after `main`. Python requires you to define functions before you call them (at module level).
+
+---
+
+### functions2 — "Add the missing type of the argument `num` after the colon"
+
+**The broken file:**
+
+```rust
+fn call_me(num:) {
+    for i in 0..num {
+        println!("Ring! Call number {}", i + 1);
+    }
+}
+```
+
+**The error:**
+
+```
+error: expected type, found `)`
+```
+
+**The fix:** add a type. The exercise hints at `u8` (unsigned 8-bit integer, 0–255):
+
+```rust
+fn call_me(num: u8) {     // ← u8 is a small unsigned integer (0..=255)
+    for i in 0..num {
+        println!("Ring! Call number {}", i + 1);
+    }
+}
+```
+
+**Why mandatory?** Rust is **statically typed**: the compiler must know exactly what kind of value `num` is, at compile time, so it can:
+- Generate the right machine code
+- Check that `0..num` (a range) is valid for that type
+- Catch errors like calling `call_me("hello")` before you ship
+
+**Python parallel:** Python figures out types at runtime. `def call_me(num):` accepts anything until you actually try to do something type-specific with it.
+
+**Type picking cheat sheet:**
+
+| Type | Range / meaning | Use when |
+|---|---|---|
+| `i8` | -128 to 127 | small signed |
+| `i32` | -2³¹ to 2³¹-1 | default for integers |
+| `i64` | -2⁶³ to 2⁶³-1 | big numbers, file sizes |
+| `u8` | 0 to 255 | bytes, ASCII, small counts |
+| `u32` | 0 to 2³²-1 | sizes, counts |
+| `f32` | 32-bit float | rarely (precision loss) |
+| `f64` | 64-bit float | default for floats |
+| `bool` | true / false | booleans |
+| `&str` | string slice | text |
+| `char` | single Unicode char | `'a'`, `'🦀'` |
+
+When in doubt, use `i32` for ints and `f64` for floats.
+
+---
+
+### functions3 — "Fix the function call"
+
+**The broken file:**
+
+```rust
+fn call_me(num: u8) {
+    for i in 0..num {
+        println!("Ring! Call number {}", i + 1);
+    }
+}
+
+fn main() {
+    call_me();       // ← ERROR: expected 1 argument, found 0
+}
+```
+
+**The error:**
+
+```
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+```
+
+**The fix:** pass the argument at the call site:
+
+```rust
+fn main() {
+    call_me(3);      // ← provide a u8 value
+}
+```
+
+**Python parallel:** Python would raise `TypeError: call_me() missing 1 required positional argument: 'num'` at runtime. Rust catches it at compile time.
+
+**Rust quirk:** Rust does NOT support default arguments like Python's `def f(x=10)`. If you want defaults, you write a second function:
+
+```rust
+fn call_me_default() {
+    call_me(3);      // hard-coded default
+}
+
+fn call_me(num: u8) {
+    // ...
+}
+```
+
+(There are tricks with traits and the `Default` trait, but for now, just write a second function.)
+
+---
+
+### functions4 — "Fix the function signature" (return type)
+
+**The broken file:**
+
+```rust
+fn is_even(num: i64) -> bool {
+    num % 2 == 0
+}
+
+fn sale_price(price: i64) -> {       // ← return type missing!
+    if is_even(price) {
+        price - 10
+    } else {
+        price - 3
+    }
+}
+```
+
+**The error:**
+
+```
+error[E0308]: mismatched types
+  expected `i64`, found `()`
+```
+
+**Why?** The compiler sees `if is_even { price - 10 } else { price - 3 }` and says "this if/else block returns `i64`". But the function's signature says `-> { ... }` (no type), which defaults to `-> ()` (return nothing). **Mismatch.**
+
+**The fix:** add `-> i64`:
+
+```rust
+fn sale_price(price: i64) -> i64 {       // ← return type added
+    if is_even(price) {
+        price - 10
+    } else {
+        price - 3
+    }
+    // Note: NO semicolon after the if/else!
+    // The whole if/else block IS an expression, and its value is the return
+}
+```
+
+**The if/else-is-an-expression rule:**
+
+```rust
+let x = if condition { 1 } else { 2 };   // x is i32, value is 1 or 2
+```
+
+There's no ternary operator (`? :`) in Rust. You don't need one — `if/else` already returns a value.
+
+**Python parallel:**
+
+```python
+def sale_price(price: int) -> int:        # Python: -> int is a HINT, not enforced
+    if price % 2 == 0:
+        return price - 10
+    else:
+        return price - 3
+```
+
+In Python, `-> int` is a comment that linters can check. In Rust, `-> i64` is enforced by the compiler. Forget it and the program won't compile.
+
+---
+
+### functions5 — "Fix the function body" (drop the semicolon)
+
+**The broken file:**
+
+```rust
+fn square(num: i32) -> i32 {
+    num * num;       // ← trailing semicolon!
+}
+```
+
+**The error:**
+
+```
+error[E0308]: mismatched types
+  expected `i32`, found `()`
+```
+
+**Why?** `num * num;` is a **statement** (note the `;`), not an expression. It has no value. The function body evaluates to `()`, but the signature says `-> i32`. Mismatch.
+
+**The fix:** drop the semicolon:
+
+```rust
+fn square(num: i32) -> i32 {
+    num * num        // ← no semicolon! this is the return value
+}
+```
+
+**This is the #1 newbie mistake in Rust.** You'll write `;` out of habit. The compiler will scream at you. Read the error — it almost always says "expected X, found `()`", which means "you put a `;` somewhere a value was expected".
+
+**Python parallel:** doesn't apply. Python doesn't have implicit returns. You always need an explicit `return`.
+
+---
+
+## 4. Multiple return values — tuples
+
+### Python
+
+```python
+def min_and_max(numbers):
+    return min(numbers), max(numbers)    # tuple, automatic
+
+lo, hi = min_and_max([3, 1, 4, 1, 5, 9])
+# lo = 1, hi = 9
+```
+
+### Rust
+
+```rust
+fn min_and_max(numbers: &[i32]) -> (i32, i32) {     // return type is a tuple
+    let mut lo = numbers[0];
+    let mut hi = numbers[0];
+    for &n in numbers {
+        if n < lo { lo = n; }
+        if n > hi { hi = n; }
+    }
+    (lo, hi)                                        // tuple as the return value
+}
+
+let (lo, hi) = min_and_max(&[3, 1, 4, 1, 5, 9]);
+// lo = 1, hi = 9
+```
+
+**Destructuring:** `let (lo, hi) = ...` unpacks the tuple into two variables. Works in both languages.
+
+**Rust quirk:** tuple elements can be different types:
+
+```rust
+fn parse_point(s: &str) -> (i32, i32, bool) {       // x, y, success
+    // ...
+}
+```
+
+Python's tuple is the same way — just dynamic.
+
+---
+
+## 5. No `*args` / `**kwargs` — use slices
+
+### Python
+
+```python
+def tag(tag_name, *content, **attrs):
+    attr_str = " ".join(f'{k}="{v}"' for k, v in attrs.items())
+    inner = " ".join(content)
+    print(f"<{tag_name} {attr_str}>{inner}</{tag_name}>")
+
+tag("a", "click me", href="https://example.com")
+# <a href="https://example.com">click me</a>
+```
+
+### Rust
+
+```rust
+fn print_all(items: &[&str]) {            // slice of string slices
+    for item in items {
+        print!("{item} ");
+    }
+    println!();
+}
+
+print_all(&["a", "b", "c"]);              // pass a slice
+```
+
+**The trade-off:**
+- Python: `*args`/`**kwargs` let a function accept any number of arguments
+- Rust: you pass a **slice** (`&[T]`) or **Vec** (`Vec<T>`) — a single value that holds many things
+
+You'll learn the full `Vec<T>` story later. For now: a slice `&[T]` is "a view into a sequence of T values". `&["a", "b", "c"]` is a slice of `&str`.
+
+**No keyword arguments.** Rust has named parameters only via struct literals — different concept, future lesson.
+
+---
+
+## 6. Functions as values (function pointers)
+
+### Python
+
+```python
+def square(x):
+    return x * x
+
+def apply(f, x):       # f is a callable
+    return f(x)
+
+print(apply(square, 7))    # 49
+```
+
+### Rust
+
+```rust
+fn square(x: i32) -> i32 {
+    x * x
+}
+
+fn apply(f: fn(i32) -> i32, x: i32) -> i32 {    // f is a function pointer
+    f(x)
+}
+
+println!("{}", apply(square, 7));    // 49
+```
+
+**The type annotation `fn(i32) -> i32`** says "this is a pointer to a function that takes an `i32` and returns an `i32`".
+
+**Note:** Rust also has **closures** (`|x| x * x`) and **traits** (`Fn`, `FnMut`, `FnOnce`) for more powerful function-as-value patterns. That's lesson 17 material. For now, plain `fn` pointers are enough.
+
+---
+
+## 7. The 5 rules of Rust functions (cheat sheet)
+
+| Rule | Python | Rust |
+|---|---|---|
+| Keyword | `def` | `fn` |
+| Parameter types | optional hints | **mandatory** |
+| Return type | `-> int` is a hint | `-> i32` is enforced |
+| Return value | explicit `return x` | last expression (no `;`) or explicit `return` |
+| Default args | `def f(x=10):` | not supported (write a second function) |
+| `*args` | yes | no — use `&[T]` slice |
+| `**kwargs` | yes | no — use structs |
+| Multiple returns | tuple, automatic | tuple: `-> (T, U)` |
+| Docstring | `"""..."""` | `///` (doc comment, special) |
+| Can define after use? | No (at module level) | Yes |
+
+---
+
+## 8. Common compile errors you'll hit (and what they mean)
+
+| Error | What you did wrong | Fix |
+|---|---|---|
+| `expected type, found \`)\`` | parameter missing a type | `def f(x)` → `fn f(x: i32)` |
+| `expected \`i32\`, found \`()``  | you put `;` where a value was needed | drop the `;` from the last line of the function |
+| `expected \`i64\`, found \`()`` | function signature missing return type | add `-> i64` after the params |
+| `this function takes 1 argument but 0 arguments were supplied` | forgot to pass an argument | pass it at the call site |
+| `cannot find function \`foo\` in this scope` | typo or function not defined | define `foo` (in any order) |
+| `expected \`i32\`, found \`&str\`` | wrong argument type | convert: `"3".parse().unwrap()` or change the param type |
+
+**Always read the error top to bottom.** The first line tells you the rule. The line with `^^^^^^^^` is where. The `help:` line (if any) tells you the fix.
+
+---
+
+## 9. The 5 rustlings exercises, solved
+
+For reference, here's what each function looks like when fixed:
+
+```rust
+// functions1 — define a function
+fn call_me() {
+    println!("called!");
+}
+
+// functions2 — type the parameter
+fn call_me(num: u8) {
+    for i in 0..num {
+        println!("Ring! Call number {}", i + 1);
+    }
+}
+
+// functions3 — pass the argument
+fn main() {
+    call_me(3);   // pass it
+}
+
+// functions4 — return type
+fn sale_price(price: i64) -> i64 {       // ← return type added
+    if is_even(price) { price - 10 } else { price - 3 }
+}
+
+// functions5 — drop the semicolon
+fn square(num: i32) -> i32 {
+    num * num     // ← no ;
+}
+```
+
+---
+
+## 10. Try it yourself
+
+1. **Run the cargo version:**
+   ```bash
+   cd /home/siseng/Documents/programing_languages/Rust/rust-from-python/playground
+   cargo run --bin 03_functions
+   ```
+   You should see all 5 sections print, ending with `The square of 3 is 9`.
+
+2. **Break it on purpose:** in `playground/src/bin/03_functions.rs`, add a `;` to the `square` function's last line. Run it. Read the error. Fix it. The compiler is your teacher.
+
+3. **Write your own:** add a new function `celsius_to_fahrenheit(c: f64) -> f64`. Call it with `0.0`, `100.0`, and `-40.0`. The last one is a famous easter egg: -40°C = -40°F.
+
+---
+
+## 11. What's next
+
+- **Lesson 04** — Control flow: `if/else` (we've seen it in functions4), `match` (the powerful version of `switch`), and **no truthy/falsy** in Rust
+- **Lesson 05** — Loops: `for`, `while`, `loop`, and the `break` value trick
+- **Lesson 06** — Ownership & borrowing (the famous Rust thing Python doesn't have)
