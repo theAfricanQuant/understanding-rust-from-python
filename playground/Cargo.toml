@@ -14,3 +14,7 @@ path = "src/bin/02_vars.rs"
 [[bin]]
 name = "03_functions"
 path = "src/bin/03_functions.rs"
+
+[[bin]]
+name = "04_if_else"
+path = "src/bin/04_if_else.rs"

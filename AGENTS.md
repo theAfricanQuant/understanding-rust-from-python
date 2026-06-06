@@ -25,7 +25,7 @@ A personal learning journal: **learning Rust from a Pythonista's perspective**, 
 | 01 | Hello World | ✅ done | 5th June, 2026 |
 | 02 | Variables | ✅ done | 5th June, 2026 |
 | 03 | Functions | ✅ done | 6th June, 2026 |
-| 04 | If/else | ⬜ pending | — |
+| 04 | If/else | ✅ done | 6th June, 2026 |
 | 05 | Loops | ⬜ pending | — |
 | 06 | Ownership & borrowing | ⬜ pending | — |
 | 07 | Structs & enums | ⬜ pending | — |

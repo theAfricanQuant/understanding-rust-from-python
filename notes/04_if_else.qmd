@@ -1,0 +1,512 @@
+---
+title: "Lesson 04 — If/else"
+subtitle: "Rust from Python — verbose explainer"
+date: "2026-06-06"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: false
+    code-tools: true
+    embed-resources: true
+    theme: cosmo
+topic: "If/else"
+date_completed: "2026-06-06"
+date_display: "6th June, 2026"
+status: "done"
+rustlings_source: "exercises/03_if/if1.rs, if2.rs, if3.rs"
+---
+
+# Lesson 04 — If/else
+
+> **Python first, Rust second, side by side, into the weeds.**
+
+`if/else` is the most basic control flow. You already know the shape. The differences between Python and Rust are about **what counts as a condition**, **what each branch returns**, and **whether if is a statement or an expression**.
+
+---
+
+## 1. The 3 differences that will trip you up
+
+| # | Python | Rust |
+|---|---|---|
+| 1 | `if` is a **statement** — doesn't return a value | `if` is an **expression** — every branch returns a value |
+| 2 | Condition can be any **truthy/falsy** value (`0`, `""`, `[]`, `None`, …) | Condition **must be `bool`** — nothing else compiles |
+| 3 | `elif` keyword | `else if` (two words) |
+
+We'll go deep on each of these.
+
+---
+
+## 2. The big idea: `if` is an expression, not a statement
+
+In **Python**, `if` is a *statement* — it doesn't have a value. You can't write `x = if cond { a } else { b }`.
+
+In **Rust**, `if` is an *expression* — the whole block has a value, which is the value of the chosen branch.
+
+```rust
+let bigger = if a > b { a } else { b };     // ← legal Rust
+let s      = if n > 0 { "pos" } else { "neg" };
+```
+
+This **replaces the ternary operator** (`? :`) that other languages have. You don't need `? :` because the `if` already returns a value.
+
+### Python equivalent
+
+Python has two workarounds for the same idea:
+
+```python
+# 1. Ternary expression (Pythonic, since 2.5)
+bigger = a if a > b else b
+
+# 2. The if/else block itself, used as an expression (Python 3.8+ via walrus,
+#    but really just multiple lines)
+if a > b:
+    bigger = a
+else:
+    bigger = b
+```
+
+In Python, the `a if cond else b` form is just sugar for the if/else block. In Rust, the if/else block IS the expression — there's no special ternary form.
+
+### A function that returns the bigger — both languages
+
+**Python (statement form):**
+```python
+def bigger(a, b):
+    if a > b:
+        return a
+    else:
+        return b
+```
+
+**Rust (expression form, one line):**
+```rust
+fn bigger(a: i32, b: i32) -> i32 {
+    if a > b { a } else { b }       // the if/else block IS the return value
+}
+```
+
+Same logic, half the code.
+
+---
+
+## 3. The big idea: conditions must be `bool`
+
+In **Python**, the condition after `if` can be anything. Python calls `bool()` on it:
+- `0`, `0.0`, `""`, `[]`, `{}`, `None` → `False` (falsy)
+- everything else → `True` (truthy)
+
+In **Rust**, the condition **must be a `bool`**. Period. The compiler will reject `if 0 { }` outright.
+
+```rust
+let n = 0;
+if n { }              // ❌ ERROR: expected `bool`, found integer
+if n != 0 { }         // ✅ explicit comparison returns bool
+```
+
+**This is the #1 difference Pythonistas hit.** All those idiomatic `if some_list:` patterns in Python have to become `if !some_list.is_empty():` in Rust.
+
+### The truth-table cheat sheet
+
+| Python | Rust |
+|---|---|
+| `if n:` (any int) | `if n != 0:` (or `if n > 0:`) |
+| `if s:` (any string) | `if !s.is_empty():` |
+| `if lst:` (any list) | `if !lst.is_empty():` |
+| `if x is None:` | `if x.is_none():` (or pattern matching) |
+| `if x is not None:` | `if x.is_some():` (for `Option<T>`) |
+
+The Python forms are shorter. The Rust forms are **explicit about what you're testing** — which is the whole point of Rust's design.
+
+### "But my whole codebase uses truthy checks!"
+
+You'll have to refactor them. The good news: the compiler will tell you every single one, and most are obvious 1-character fixes (`!some_list.is_empty()` instead of `if some_list:`).
+
+---
+
+## 4. The big idea: all branches must have the same type
+
+When `if` is an expression, every branch must produce a value of the **same type**. The compiler needs to know the type of the whole if/else block.
+
+### This works
+
+```rust
+let x: i32 = if cond { 1 } else { 2 };      // both branches i32
+let s: &str = if cond { "yes" } else { "no" };   // both branches &str
+```
+
+### This doesn't work
+
+```rust
+let x = if cond { 1 } else { "no" };
+// ❌ ERROR: expected integer, found `&str`
+//
+// The whole if/else block needs ONE type.
+// The if-branch is i32, the else-branch is &str — compiler can't reconcile.
+```
+
+### The fix
+
+Either change one branch:
+
+```rust
+let x = if cond { 1 } else { 0 };          // both i32
+let s = if cond { "yes" } else { "no" };   // both &str
+```
+
+Or convert one branch to match the other:
+
+```rust
+let x = if cond { 1 } else { "no".len() };  // both usize (length)
+// ↑ probably not what you want, but it compiles
+```
+
+Or use a sum type (later lesson): `let x = if cond { Some(1) } else { None };` (becomes `Option<i32>`)
+
+### When branches have different types, you'll see this error
+
+```
+error[E0308]: `if` and `else` have incompatible types
+  --> src/main.rs:2:9
+   |
+2  |     let x = if cond { 1 } else { "no" };
+   |                 ^          ----- expected integer, found `&str`
+   |
+   = note: expected type `{integer}`
+              found type `&'static str`
+```
+
+**The fix is always: make the branches agree on one type.**
+
+---
+
+## 5. The 3 rustlings exercises, walked through
+
+### if1 — "Complete the function to return the bigger number"
+
+**The broken file:**
+
+```rust
+fn bigger(a: i32, b: i32) -> i32 {
+    // TODO: Complete this function to return the bigger number!
+    // If both numbers are equal, any of them can be returned.
+    // Do not use:
+    // - another function call
+    // - additional variables
+}
+```
+
+**The error:**
+
+```
+error[E0308]: mismatched types
+  --> src/main.rs:3:1
+   |
+3  | }
+   | ^ expected `i32`, found `()`
+   |
+   = note:     expected type `i32`
+           found type `()`
+```
+
+The function body has no expression — it returns `()`. But the signature says `-> i32`.
+
+**The fix:** add an if/else expression that returns an `i32`:
+
+```rust
+fn bigger(a: i32, b: i32) -> i32 {
+    if a > b { a } else { b }       // both branches return i32
+}
+```
+
+**Note the constraints** in the comment:
+- "Don't use another function call" → can't call `max()` or `std::cmp::max()`
+- "Don't use additional variables" → can't write `let result = ...; result`
+
+The if/else expression satisfies both: it's not a function call, and it doesn't introduce a variable.
+
+**Python parallel:**
+
+```python
+def bigger(a, b):
+    return a if a > b else b
+# or
+def bigger(a, b):
+    if a > b:
+        return a
+    else:
+        return b
+```
+
+Both Python forms use explicit `return`. Rust's form uses implicit return via the if/else expression.
+
+---
+
+### if2 — "Fix the compiler error in the function body"
+
+**The broken file:**
+
+```rust
+fn picky_eater(food: &str) -> &str {
+    if food == "strawberry" {
+        "Yummy!"
+    } else {
+        1                          // ← ERROR: this branch is an integer
+    }
+}
+```
+
+**The error:**
+
+```
+error[E0308]: `if` and `else` have incompatible types
+  --> src/main.rs:3:5
+   |
+3  |     if food == "strawberry" {
+   |        - expected because of this
+4  |         "Yummy!"
+5  |     } else {
+6  |         1
+   |         ^ expected `&str`, found integer
+```
+
+The if-branch is `&str`, the else-branch is an integer. **The whole if/else block needs ONE type.** Since the signature says `-> &str`, every branch must return a `&str`.
+
+**The fix (from the test file):**
+
+```rust
+fn picky_eater(food: &str) -> &'static str {
+    if food == "strawberry" {
+        "Yummy!"
+    } else if food == "potato" {
+        "I guess I can eat that."
+    } else {
+        "No thanks!"
+    }
+}
+```
+
+All three branches return `&'static str`. The `&'static str` type means "a string literal baked into the binary" — fine for fixed messages like these.
+
+**Note:** the broken file only had 2 branches (if/else). The full version uses `else if` to handle more cases.
+
+**Python parallel:**
+
+```python
+def picky_eater(food):
+    if food == "strawberry":
+        return "Yummy!"
+    elif food == "potato":
+        return "I guess I can eat that."
+    else:
+        return "No thanks!"
+```
+
+Python doesn't care that all branches return strings — types are dynamic. Rust enforces it at compile time.
+
+---
+
+### if3 — "Fix the compiler error in the let statement"
+
+**The broken file:**
+
+```rust
+fn animal_habitat(animal: &str) -> &str {
+    let identifier = if animal == "crab" {
+        1
+    } else if animal == "gopher" {
+        2.0
+    } else if animal == "snake" {
+        3
+    } else {
+        "Unknown"
+    };
+
+    if identifier == 1 { "Beach" }
+    else if identifier == 2 { "Burrow" }
+    else if identifier == 3 { "Desert" }
+    else { "Unknown" }
+}
+```
+
+**The error:**
+
+```
+error[E0308]: `if`, `else if` and `else` have incompatible types
+  --> src/main.rs:3:9
+   |
+3  |     let identifier = if animal == "crab" {
+   |         ^^^^^^^^^^ expected because of this
+...
+   = note: expected type `i32`
+              found type `f64`
+```
+
+The first if/else block has 4 branches with **4 different types**:
+- `1` (i32)
+- `2.0` (f64)
+- `3` (i32) — but the first branch already set the expected type
+- `"Unknown"` (&str)
+
+**The fix:** make all branches the same type. Since the next step compares `identifier` to `1`, `2`, `3` (integers), let's keep numbers but make them all i32:
+
+```rust
+let identifier = if animal == "crab" {
+    1
+} else if animal == "gopher" {
+    2
+} else if animal == "snake" {
+    3
+} else {
+    0           // ← default; previously the unknown branch was a string
+};
+```
+
+All branches are now `i32`. The second if/else compares `identifier` to integer literals, which works.
+
+**A cleaner alternative** would be to use `&'static str` everywhere:
+
+```rust
+let identifier = if animal == "crab" {
+    "1"
+} else if animal == "gopher" {
+    "2"
+} // ...
+```
+
+But then `if identifier == 1` wouldn't work — you'd compare to `"1"`. The original test code expects integers, so the integer version is what fits.
+
+**The pattern this teaches:** *pick one type for the whole if/else block, then make all branches conform.*
+
+---
+
+## 6. `else if` (not `elif`)
+
+Python has `elif`. Rust does not — it has `else if` (two words). Same thing, different spelling.
+
+```python
+# Python
+if x > 0:
+    ...
+elif x < 0:
+    ...
+else:
+    ...
+```
+
+```rust
+// Rust
+if x > 0 {
+    ...
+} else if x < 0 {
+    ...
+} else {
+    ...
+}
+```
+
+`else if` chains can be arbitrarily long. Each branch can use any condition (any bool expression).
+
+---
+
+## 7. If without an else (statement form)
+
+You don't have to use `if` as an expression. If you omit the `else` branch, the whole if becomes a statement:
+
+```rust
+let n = 5;
+if n > 0 {
+    println!("positive");
+}
+// no else — that's fine, the if is just a statement
+println!("done");
+```
+
+**Note:** when `if` has no `else`, you can't assign its result to anything (there's no "default" value for "no branch was taken"). You can only use it for its side effects (printing, mutating, etc.).
+
+**Python parallel:** same — Python `if` (without `else`) is a statement, used for side effects.
+
+---
+
+## 8. Nested if
+
+You can nest if inside if:
+
+```rust
+if n != 0 {
+    if n > 0 {
+        println!("positive non-zero");
+    } else {
+        println!("negative non-zero");
+    }
+} else {
+    println!("zero");
+}
+```
+
+**This works but gets ugly fast.** For 3+ levels, prefer `else if` chains or `match` (lesson 12).
+
+**Python parallel:** same — Python supports nested if, but `elif` chains are usually cleaner.
+
+---
+
+## 9. The 5 rules of Rust if/else (cheat sheet)
+
+| Rule | Python | Rust |
+|---|---|---|
+| Keyword for else-if | `elif` | `else if` |
+| Statement or expression? | statement | **expression** (returns a value) |
+| Condition type | any truthy/falsy | **must be `bool`** |
+| Branch types can differ? | yes (any types) | **no — all branches must agree** |
+| Ternary operator `? :` | yes (`a if cond else b`) | **no** — just use the if expression |
+
+---
+
+## 10. Common compile errors you'll hit (and what they mean)
+
+| Error | What you did wrong | Fix |
+|---|---|---|
+| `expected \`bool\`, found \`{integer}\`` | condition was `0`, `1`, etc. | use a comparison: `n != 0`, `n > 0` |
+| `expected \`bool\`, found \`{float}\`` | condition was `0.0`, etc. | use a comparison: `f != 0.0` |
+| `expected \`&str\`, found integer` | branches have different types | make all branches the same type |
+| `\`)'\` not allowed after if expression` | you put a `;` inside an if used as a value | remove the `;` from the branch's last expression |
+| `expected \`i32\`, found \`()'\``  | if/else block has no value (a branch is a `;` statement) | make the branch an expression (no `;`) |
+| `if may be missing an else clause` | using `if` as a value without `else` | add an `else` branch, or don't assign the result |
+
+**Always read the error top to bottom.** The first line tells you the rule. The line with `^^^^^^^^` is where. The `help:` line (if any) tells you the fix.
+
+---
+
+## 11. Try it yourself
+
+1. **Run the cargo version:**
+   ```bash
+   cd /home/siseng/Documents/programing_languages/Rust/rust-from-python/playground
+   cargo run --bin 04_if_else
+   ```
+   You should see all 3 sections print, ending with `dinosaur -> Unknown`.
+
+2. **Break it on purpose:** in `playground/src/bin/04_if_else.rs`, change the `bigger` function to `if a > b { a }` (no else). Compile. Read the error. The function returns `i32` from one branch and `()` from the implicit no-else branch — mismatch.
+
+3. **Write your own:** add a function `fizz_buzz(n: u32) -> String` that returns:
+   - `"FizzBuzz"` if `n` is divisible by both 3 and 5
+   - `"Fizz"` if divisible by 3
+   - `"Buzz"` if divisible by 5
+   - the number as a string otherwise
+
+   Use chained `else if` (or hint: there's a more elegant pattern using `match` — but that's lesson 12).
+
+---
+
+## 12. Further reading
+
+- **The Rust Book, ch. 3.5** — [Control Flow](https://doc.rust-lang.org/book/ch03-05-control-flow.html#if-expressions). The official source, covers `if` and the upcoming `loop`/`while`/`for`.
+- **W3Schools Rust If..Else** — https://www.w3schools.com/rust/rust_if_else.php. Same content, browser-playable examples.
+- **Rust by Example, if/else** — https://doc.rust-lang.org/rust-by-example/flow_control/if_else.html. Small examples.
+- **Microsoft Python→Rust book** — relevant sections on control flow, if any.
+
+## 13. What's next
+
+- **Lesson 05** — Loops: `for`, `while`, `loop` (and the `break` value trick)
+- **Lesson 12** — `match`: the powerful version of `switch` (and a better alternative to long `else if` chains)
+- **Lesson 06** — Ownership & borrowing (the famous Rust thing Python doesn't have)

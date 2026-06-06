@@ -39,7 +39,7 @@ quarto render learn-rust.qmd --to html
 | 01 | Hello world | 5th June, 2026 | ✅ done |
 | 02 | Variables (`let`, `mut`, types, shadowing, `const`) | 5th June, 2026 | ✅ done |
 | 03 | Functions | 6th June, 2026 | ✅ done |
-| 04 | Control flow | — | ⬜ pending |
+| 04 | If/else (expression, bool-only, same-type branches) | 6th June, 2026 | ✅ done |
 | 05 | Loops | — | ⬜ pending |
 | 06 | Ownership & borrowing | — | ⬜ pending |
 | 07 | Structs & enums | — | ⬜ pending |
