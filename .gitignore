@@ -37,3 +37,6 @@ _site/
 *~
 .DS_Store
 Thumbs.db
+
+# --- PDFs (source materials kept locally, not tracked) ---
+*.pdf
