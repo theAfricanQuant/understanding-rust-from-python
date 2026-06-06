@@ -1,6 +1,8 @@
 # Project State — Resume Point
 
 > **Read this first next time** to pick up exactly where we stopped.
+>
+> For full project context (architecture, conventions, resources, roadmap), see [`AGENTS.md`](./AGENTS.md).
 
 **Last updated:** 5th June, 2026
 
