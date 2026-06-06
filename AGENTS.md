@@ -48,6 +48,7 @@ rust-from-python/
 │
 ├── (no combined doc — one .qmd per lesson in notes/, render to HTML separately)
 │
+├── **No Jupyter** — code is run via `cargo`/`uv run python`/`rustc`. The .qmd files render to plain HTML with no code execution.
 ├── python/                     ← standalone Python scripts, one per lesson
 │   ├── 01_hello.py
 │   ├── 02_vars.py
@@ -72,8 +73,7 @@ rust-from-python/
 │   ├── 02_vars-quickref.md
 │   └── running-rust.qmd        ← cargo vs rustc explained
 │
-├── .venv/                      ← uv-managed venv (gitignored)
-└── .ipynb_checkpoints/         ← Quarto intermediates (gitignored)
+├── .venv/                      ← uv-managed venv (gitignored, may be empty if no Python deps)
 ```
 
 Rendered HTML files (`*.html`, `*_files/`) live next to their `.qmd` sources but are **gitignored**. Re-render locally.
@@ -109,7 +109,8 @@ Every lesson produces these 8 deliverables, in this order:
 - **Package manager:** `uv` (the modern one)
 - **Run any Python command with:** `uv run python ...`
 - **Render qmd:** `uv run quarto render ...`
-- **Virtualenv:** `.venv/` (auto-created by `uv sync`, gitignored)
+- **Virtualenv:** `.venv/` (auto-created by `uv sync`, gitignored, may be empty)
+- **No Python runtime dependencies** — the project only uses the stdlib
 
 ### Rust side
 
@@ -175,7 +176,6 @@ The user has bookmarked these Python→Rust resources. When writing or expanding
 
 - [ ] Lesson 04: If/else (covers `match`, no truthy/falsy)
 - [ ] Lesson 05: Loops (for/while/loop, break value trick)
-- [ ] ~~Consider consolidating `learn-rust.qmd` to be the single rendered "main" doc, with each lesson as its own section (instead of separate notes/XX.qmd files)~~ — **Decision (6th June, 2026): NO combined doc. Each lesson stays in its own `notes/XX.qmd`.**
 
 ### Medium term
 
@@ -198,9 +198,8 @@ The user has bookmarked these Python→Rust resources. When writing or expanding
 |---|---|---|
 | `rustc` 1.96.0, `cargo` 1.96.0, `rustup` 1.29.0 | rustup | Rust toolchain |
 | `rust-analyzer` | rustup component | IDE support |
-| `uv` 0.11.3 | astral.sh installer | Python deps |
-| `quarto` 1.9.37 | apt (.deb) | Render qmd to HTML |
-| `evcxr_jupyter` | `cargo install` | Rust Jupyter kernel |
+| `uv` 0.11.3 | astral.sh installer | Python deps (currently none) |
+| `quarto` 1.9.37 | apt (.deb) | Render qmd to HTML (static, no execution) |
 | `gcc`, `gdb`, `build-essential` | apt | Compilation + debugging |
 
 **System:** TUXEDO OS 24.04 (Ubuntu base), Linux 6.17, x86_64.
@@ -209,9 +208,9 @@ The user has bookmarked these Python→Rust resources. When writing or expanding
 
 ## Open questions / decisions logged
 
-- **qmd Rust execution:** Deferred. Quarto's jupyter engine is single-kernel per document; Rust chunks render as code-only. Python chunks execute. Rust is run via `cargo run --bin XX` from the `playground/` folder. The user explicitly said "stop the qmd stuff" mid-discussion, so don't reopen unless asked.
+- **qmd execution:** NONE. The .qmd files render to plain HTML with no code execution. Rust chunks are run via `cargo run --bin XX` from the `playground/` folder; Python chunks are run via `uv run python XX.py`. This is by design (decision: 6th June 2026, after user said "stop the qmd stuff" and "delete all the jupyter references").
 - **Date format:** Human-friendly `5th June, 2026` for display, ISO `2026-06-05` in YAML. Both kept in `date_display` and `date_completed` fields.
-- **Per-lesson 9-item pattern:** Established and used for lessons 01, 02 (complete) and 03 (in progress). Stick with it.
+- **Per-lesson 8-item pattern:** Established 6th June 2026 (was 9 items; dropped the combined `learn-rust.qmd` section). Stick with it.
 
 ---
 

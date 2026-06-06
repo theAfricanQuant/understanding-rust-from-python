@@ -4,15 +4,7 @@ version = "0.1.0"
 description = "Learning Rust from a Pythonista's perspective — side-by-side lessons"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "jupyter>=1.0",
-    "ipykernel>=6.0",
-    "matplotlib>=3.8",
-    "numpy>=1.26",
-]
-
-[tool.uv]
-dev-dependencies = []
+dependencies = []
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

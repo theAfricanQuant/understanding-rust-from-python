@@ -67,17 +67,17 @@ Next time, the assistant should:
 ## Other completed setup work
 
 - Repo pushed to `git@github.com:theAfricanQuant/rust-from-python.git`
-- `pyproject.toml` + `uv.lock` (Python deps via `uv`)
+- `pyproject.toml` + `uv.lock` (currently no Python deps — stdlib only)
 - `SETUP.md` (first-time clone instructions)
-- `notes/running-rust.md` (`cargo` vs `rustc` explained with Python parallels)
-- `learn-rust.qmd` Python chunks execute via jupyter kernel (verified 3 outputs)
-- Rust jupyter kernel installed (`evcxr_jupyter` — Rust chunks render as code only; Quarto jupyter is single-kernel, so Rust execution is via `cargo run --bin XX`)
+- `notes/running-rust.qmd` (`cargo` vs `rustc` explained with Python parallels)
+- All 4 qmd files in `notes/` render to standalone HTML (no jupyter, no execution)
 
 ## Decisions made / open questions
 
-- **qmd Rust execution:** Deferred. User asked to stop the qmd/option-B discussion and focus on running Rust via `cargo`/`rustc`. State of the doc: Python chunks execute, Rust chunks render as code-only. Not revisited yet.
-- **Date format:** Human-friendly `5th June, 2026` for display, ISO `2026-06-05` in YAML frontmatter. Both kept in `date_display` and `date_completed` fields.
-- **Per-lesson update pattern (8 files + commit + push):** Established and used for lessons 01 and 02.
+- **No jupyter, no execution in qmd** (decision 6th June 2026). .qmd files render to plain HTML. Code is run via `cargo`/`uv run python`/`rustc`. Cleaner, faster, fewer moving parts.
+- **No combined `learn-rust.qmd` doc** (decision 6th June 2026). Each lesson is its own self-contained `.qmd` in `notes/`.
+- **Date format:** Human-friendly `5th June, 2026` for display, ISO `2026-06-05` in YAML. Both kept in `date_display` and `date_completed` fields.
+- **Per-lesson update pattern (8 files + commit + push):** Established and used for lessons 01, 02, 03.
 
 ## Out of scope (mention only if user asks)
 

@@ -61,18 +61,19 @@ cd rust-from-python
 ## 3. Python side — uv handles everything
 
 ```bash
-# creates .venv/ and installs every dep from pyproject.toml + uv.lock
+# creates .venv/ from pyproject.toml + uv.lock
 uv sync
 
 # verify it works
 uv run python --version
-uv run python -c "import jupyter, ipykernel, matplotlib, numpy; print('ok')"
 ```
+
+The `pyproject.toml` has no Python dependencies — the project doesn't need any runtime libs. You only need `python3` + `uv` to run the Python scripts in `python/`.
 
 **Every Python command, prefix with `uv run`:**
 ```bash
 uv run python python/01_hello.py
-uv run jupyter lab              # if you want a notebook UI
+uv run python python/03_functions.py
 ```
 
 If `uv run` ever feels verbose, activate the venv once:
@@ -101,43 +102,39 @@ rustc rust/01_hello.rs -o /tmp/01_hello
 /tmp/01_hello
 ```
 
-> **What do those commands actually do?** See [`notes/running-rust.md`](./notes/running-rust.md) for a full breakdown of `cargo` vs `rustc`, with Python parallels for each piece.
+> **What do those commands actually do?** See [`notes/running-rust.qmd`](./notes/running-rust.qmd) for a full breakdown of `cargo` vs `rustc`, with Python parallels for each piece.
 
 ---
 
-## 5. Render the side-by-side doc
+## 5. Render the lesson notes
+
+Each lesson is its own self-contained `.qmd` in `notes/`. Render to HTML:
 
 ```bash
-quarto render learn-rust.qmd --to html
+uv run quarto render notes/01_hello.qmd --to html
+uv run quarto render notes/03_functions.qmd --to html
+```
+
+Or render all four at once:
+
+```bash
+for f in notes/*.qmd; do
+  uv run quarto render "$f" --to html
+done
 ```
 
 Open the result:
 ```bash
-xdg-open learn-rust.html        # Linux
-# or just open it in VS Code
+xdg-open notes/03_functions.html
+# or open in VS Code
+code notes/03_functions.html
 ```
+
+The rendered HTML files are gitignored — re-render locally after cloning.
 
 ---
 
-## 6. (Optional) Make the `{rust}` chunks in the qmd actually run
-
-The .qmd has Python chunks (always work) and Rust chunks (need an extra kernel).
-
-```bash
-# install evcxr (a Rust Jupyter kernel) — takes 5-10 min to compile
-cargo install evcxr_jupyter
-evcxr_jupyter --install
-
-# verify
-jupyter kernelspec list
-# you should see: python3  rust
-```
-
-Now `quarto render learn-rust.qmd` will execute `{rust}` chunks too.
-
----
-
-## 7. Verify everything
+## 6. Verify everything
 
 Run this checklist:
 
@@ -152,7 +149,7 @@ cd playground && cargo run --bin 01_hello && cd ..   # prints same
 rustc rust/01_hello.rs -o /tmp/h && /tmp/h       # prints same
 
 # Quarto
-quarto render learn-rust.qmd --to html          # produces learn-rust.html
+uv run quarto render notes/01_hello.qmd --to html    # produces notes/01_hello.html
 ```
 
 If all four pass, you're set.
@@ -167,7 +164,6 @@ If all four pass, you're set.
 | `cargo: command not found` | `source "$HOME/.cargo/env"` or restart terminal |
 | `linker 'cc' not found` | `sudo apt install build-essential` |
 | `error: failed to run custom build command for openssl-sys` | `sudo apt install libssl-dev pkg-config` |
-| Quarto chunk `{rust}` fails | install evcxr (section 6) |
 | `Permission denied (publickey)` on git push | your SSH key isn't on the GitHub account — add `~/.ssh/id_ed25519.pub` to https://github.com/settings/keys |
 
 ---
@@ -177,13 +173,13 @@ If all four pass, you're set.
 ```
 rust-from-python/
 ├── pyproject.toml + uv.lock   ← Python deps (uv sync installs these)
-├── learn-rust.qmd             ← the lesson document
+├── notes/XX.qmd               ← the lesson explainer (uv run quarto render to HTML)
 ├── python/XX.py               ← reference Python (uv run python XX.py)
 ├── rust/XX.rs                 ← standalone Rust (rustc XX.rs && ./XX)
 ├── playground/                ← multi-bin Rust (cargo run --bin XX)
 │   ├── Cargo.toml
 │   └── src/bin/XX.rs
-├── notes/                     ← quick-reference markdown per lesson
+├── notes/XX-quickref.md       ← quick-reference one-pager
 └── .venv/                     ← uv venv, gitignored, recreated by `uv sync`
 ```
 
@@ -194,3 +190,4 @@ rust-from-python/
 | Python (uv) | `uv run python python/XX.py` |
 | Rust standalone | `rustc rust/XX.rs -o /tmp/XX && /tmp/XX` |
 | Rust cargo | `cd playground && cargo run --bin XX && cd ..` |
+| Render lesson doc | `uv run quarto render notes/XX.qmd --to html` |
