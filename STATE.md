@@ -32,10 +32,10 @@ The user asked to "go into the weeds" — verbose explanations wanted, all 5 rus
 | # | File | What it needs |
 |---|---|---|
 | 5 | `notes/03_functions-quickref.md` | One-page Python↔Rust function cheatsheet, with run commands |
-| 6 | `notes/03_functions.md` | Verbose lesson notes — go "into the weeds":<br>• All 5 rustlings exercises walked through<br>• Python parallels for each<br>• Implicit return (expression vs statement)<br>• Why types in params are mandatory<br>• Tuples for multiple return values<br>• No `*args`/`**kwargs` — use slices<br>• Function pointers (functions as values)<br>• Frontmatter: `topic`, `date_completed: 2026-06-05`, `date_display: "5th June, 2026"`, `status: done` |
-| 7 | `learn-rust.qmd` | Add Lesson 03 section with the 4 main side-by-side chunks:<br>• Python vs Rust basic function<br>• Python vs Rust params + return<br>• Python vs Rust multiple returns (tuple)<br>• Python vs Rust implicit return demo |
-| 8 | `README.md` | Update progress table — mark 03 done with date `5th June, 2026` |
-| 9 | `git commit` + `git push` | One commit: `"Lesson 03: functions"` |
+| 6 | `notes/03_functions.md` | ✅ DONE (committed in 60fe127) — 11 sections, 1007 lines, full weeds |
+| 7 | `learn-rust.qmd` | Add Lesson 03 section with the 4 main side-by-side chunks |
+| 8 | `README.md` | Update progress table — mark 03 done with date `6th June, 2026` |
+| 9 | `git commit` + `git push` | Final lesson 03 commit |
 
 ---
 
