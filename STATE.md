@@ -24,8 +24,11 @@ The user asked to "go into the weeds" — verbose explanations wanted, all 5 rus
 | 2 | `rust/03_functions.rs` | ✅ written + tested with `rustc` |
 | 3 | `playground/src/bin/03_functions.rs` | ✅ written + tested with `cargo run --bin 03_functions` |
 | 4 | `playground/Cargo.toml` | ✅ added `[[bin]]` entry for 03_functions |
+| 5 | `notes/03_functions-quickref.md` | ✅ written — one-page cheatsheet, run commands, common errors |
+| 6 | `notes/03_functions.qmd` (was `.md`) | ✅ written + rendered to HTML — 12 sections, into the weeds |
+| 7 | `README.md` progress table | ✅ marked lesson 03 done with date `6th June, 2026` |
 
-**All three Rust/Python lesson files run and produce expected output.**
+**Lesson 03 effectively complete (7/8 items).** Just needs the final commit.
 
 ---
 
@@ -33,20 +36,26 @@ The user asked to "go into the weeds" — verbose explanations wanted, all 5 rus
 
 | # | File | What it needs |
 |---|---|---|
-| 5 | `notes/03_functions-quickref.md` | One-page Python↔Rust function cheatsheet, with run commands |
-| 6 | `notes/03_functions.md` | ✅ DONE (committed in 60fe127) — 11 sections, 1007 lines, full weeds |
-| 7 | `learn-rust.qmd` | Add Lesson 03 section with the 4 main side-by-side chunks |
-| 8 | `README.md` | Update progress table — mark 03 done with date `6th June, 2026` |
-| 9 | `git commit` + `git push` | Final lesson 03 commit |
+| ~~7~~ | ~~`learn-rust.qmd` side-by-side section~~ | **REMOVED** — user decided 6th June 2026 to drop the combined doc. Each lesson is its own self-contained `.qmd` in `notes/`. |
+| 8 | `git commit` + `git push` | Final lesson 03 commit |
+
+---
+
+## Pattern change (6th June, 2026)
+
+**Old per-lesson pattern (9 items):** ... included adding a section to `learn-rust.qmd`.
+**New per-lesson pattern (8 items):** drop the combined doc. Just one `.qmd` per lesson in `notes/`.
+
+See `AGENTS.md` for the updated 8-item checklist.
 
 ---
 
 ## Resume command
 
 Next time, the assistant should:
-1. Read this file
-2. Continue with items #5–9 above
-3. Maintain the same verbose style (user explicitly asked to "get into the weeds")
+1. Read this file (STATE.md) AND AGENTS.md for full context
+2. Continue with the lesson 03 final commit
+3. Then move to lesson 04 (control flow: if/else + match)
 
 ---
 

@@ -24,7 +24,7 @@ A personal learning journal: **learning Rust from a Pythonista's perspective**, 
 |---|---|---|---|
 | 01 | Hello World | ✅ done | 5th June, 2026 |
 | 02 | Variables | ✅ done | 5th June, 2026 |
-| 03 | Functions | 🟡 in progress (5/9 items) | 6th June, 2026 |
+| 03 | Functions | ✅ done | 6th June, 2026 |
 | 04 | If/else | ⬜ pending | — |
 | 05 | Loops | ⬜ pending | — |
 | 06 | Ownership & borrowing | ⬜ pending | — |
@@ -46,7 +46,7 @@ rust-from-python/
 ├── pyproject.toml              ← Python deps (uv-managed)
 ├── uv.lock                     ← committed lockfile
 │
-├── learn-rust.qmd              ← combined side-by-side doc (lessons 01-02 inline; rest pending)
+├── (no combined doc — one .qmd per lesson in notes/, render to HTML separately)
 │
 ├── python/                     ← standalone Python scripts, one per lesson
 │   ├── 01_hello.py
@@ -82,9 +82,9 @@ Rendered HTML files (`*.html`, `*_files/`) live next to their `.qmd` sources but
 
 ## Conventions
 
-### Per-lesson checklist (the 9-item pattern)
+### Per-lesson checklist (the 8-item pattern)
 
-Every lesson produces these 9 deliverables, in this order:
+Every lesson produces these 8 deliverables, in this order:
 
 | # | File | What |
 |---|---|---|
@@ -94,9 +94,10 @@ Every lesson produces these 9 deliverables, in this order:
 | 4 | `playground/Cargo.toml` | Add `[[bin]]` entry |
 | 5 | `notes/XX_<topic>-quickref.md` | One-page cheatsheet (markdown) |
 | 6 | `notes/XX_<topic>.qmd` | Verbose explainer (qmd → render to HTML) |
-| 7 | `learn-rust.qmd` | Side-by-side section in the combined doc |
-| 8 | `README.md` | Mark lesson done in progress table with date |
-| 9 | Git commit + push | One commit: `"Lesson XX: <topic>"` |
+| 7 | `README.md` | Mark lesson done in progress table with date |
+| 8 | Git commit + push | One commit: `"Lesson XX: <topic>"` |
+
+> **Note (as of 6th June, 2026):** There is no combined `learn-rust.qmd` doc. Each lesson is its own self-contained `.qmd` in `notes/`. The user prefers this — chapter-by-chapter, not one mega-doc.
 
 ### Dates
 
@@ -174,7 +175,7 @@ The user has bookmarked these Python→Rust resources. When writing or expanding
 
 - [ ] Lesson 04: If/else (covers `match`, no truthy/falsy)
 - [ ] Lesson 05: Loops (for/while/loop, break value trick)
-- [ ] Consider consolidating `learn-rust.qmd` to be the single rendered "main" doc, with each lesson as its own section (instead of separate notes/XX.qmd files)
+- [ ] ~~Consider consolidating `learn-rust.qmd` to be the single rendered "main" doc, with each lesson as its own section (instead of separate notes/XX.qmd files)~~ — **Decision (6th June, 2026): NO combined doc. Each lesson stays in its own `notes/XX.qmd`.**
 
 ### Medium term
 
