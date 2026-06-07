@@ -27,7 +27,7 @@ A personal learning journal: **learning Rust from a Pythonista's perspective**, 
 | 03 | Functions | ✅ done | 6th June, 2026 |
 | 04 | If/else | ✅ done | 6th June, 2026 |
 | 05 | Loops | ✅ done | 7th June, 2026 |
-| 06 | Ownership & borrowing | ⬜ pending | — |
+| 06 | Ownership & borrowing | ✅ done | 7th June, 2026 |
 | 07 | Structs & enums | ⬜ pending | — |
 | 08 | Error handling | ⬜ pending | — |
 

@@ -22,3 +22,7 @@ path = "src/bin/04_if_else.rs"
 [[bin]]
 name = "05_loops"
 path = "src/bin/05_loops.rs"
+
+[[bin]]
+name = "06_ownership"
+path = "src/bin/06_ownership.rs"

@@ -41,7 +41,7 @@ uv run quarto render notes/XX_topic.qmd --to html
 | 03 | Functions | 6th June, 2026 | ✅ done |
 | 04 | If/else (expression, bool-only, same-type branches) | 6th June, 2026 | ✅ done |
 | 05 | Loops (loop, while, for, break with value, labels) | 7th June, 2026 | ✅ done |
-| 06 | Ownership & borrowing | — | ⬜ pending |
+| 06 | Ownership & borrowing (move, clone, copy, &, &mut, slices) | 7th June, 2026 | ✅ done |
 | 07 | Structs & enums | — | ⬜ pending |
 | 08 | Error handling | — | ⬜ pending |
 

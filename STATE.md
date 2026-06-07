@@ -15,53 +15,27 @@
 - **Lesson 03** — Functions ✅ 6th June, 2026
 - **Lesson 04** — If/else ✅ 6th June, 2026
 - **Lesson 05** — Loops ✅ 7th June, 2026
+- **Lesson 06** — Ownership & Borrowing ✅ 7th June, 2026
 
 ---
 
 ## Next up
 
-**Lesson 06 — Ownership & borrowing**, the foundational Rust concept that explains everything else (why `for x in items` consumes, why `&` matters, why `break` with value is safe). This is the hardest lesson for Pythonistas — plan to spend the most time here.
+**Lesson 07 — Structs & enums**: building custom types, `Option<T>`, and how ownership appears in struct fields. Structs are the foundation for the next lessons (error handling with `Result<T,E>`, pattern matching).
 
 ---
 
-## Per-lesson checklist (8 items)
+## Lesson 06 committed state
 
-| # | File | Status |
-|---|---|---|
-| 1 | `python/XX_topic.py` | ✅ |
-| 2 | `rust/XX_topic.rs` | ✅ |
-| 3 | `playground/src/bin/XX_topic.rs` | ✅ |
-| 4 | `playground/Cargo.toml` [[bin]] | ✅ |
-| 5 | `notes/XX_topic-quickref.md` | ✅ |
-| 6 | `notes/XX_topic.qmd` (render to HTML) | ✅ |
-| 7 | `README.md` progress table | ✅ |
-| 8 | Git commit + push | ✅ |
-
----
-
-## Other setup
-
-- Repo pushed to `git@github.com:theAfricanQuant/rust-from-python.git`
-- `pyproject.toml` + `uv.lock` (no Python deps — stdlib only)
-- `SETUP.md` (first-time clone instructions)
-- `notes/running-rust.qmd` (`cargo` vs `rustc` explained with Python parallels)
-- All `.qmd` files render to standalone HTML (no jupyter, no execution)
-- All `.html` and `_files/` directories gitignored; `*.pdf` gitignored
-- `docs/speed_up_your_Python_with_Rust.md` tracked, `.pdf` version gitignored
-
----
-
-## Committed state (lesson 05)
-
-- `python/05_loops.py` — 9 functions, Python-only features (for..else) highlighted
-- `rust/05_loops.rs` — 9 functions, Rust-only features (break with value, labels) highlighted
-- `playground/src/bin/05_loops.rs` — cargo bin copy
-- `playground/Cargo.toml` — has `[[bin]] name = "05_loops"`
-- `notes/05_loops-quickref.md` — one-pager
-- `notes/05_loops.qmd` — rendered to HTML, 13 sections with 2 stories:
-  - §2: "The broken microwave" — why Rust has `loop` instead of `while True`
-  - §3: "The delivery driver who needed a receipt" — `break` with a value
-  - §6: Ownership fork — borrow vs consume in `for` loops
-  - §8: Loop labels — `'outer: break 'outer` for nested loop breaks
-- `README.md` — lesson 05 marked done, outdated references cleaned
-- `AGENTS.md` — progress table + last-updated date updated
+- `python/06_ownership.py` — 6 functions showing Python refcounting, shared mutation, scoping, copy vs assign, mutability contrast
+- `rust/06_ownership.rs` — 8 functions: move, clone, copy, borrow (`&`), mut borrow (`&mut`), borrow checker, slices, no-dangle
+- `playground/src/bin/06_ownership.rs` — cargo bin copy (clean compile, no warnings)
+- `playground/Cargo.toml` — `[[bin]] name = "06_ownership"`
+- `notes/06_ownership-quickref.md` — one-pager (3 ownership rules, Copy vs Move table, borrow types, common errors)
+- `notes/06_ownership.qmd` — rendered to HTML, 15 sections, 3 stories:
+  - §2: "The library book" — ownership, move, clone, drop on scope exit
+  - §3: "The contractor with the only key" — borrowing & vs &mut, the golden rule
+  - §4: "The Post-it vs the house" — Copy vs Move, stack vs heap
+  - §12: 5 move_semantics exercises walkthrough
+- `README.md` — lesson 06 done
+- `AGENTS.md` — progress table updated

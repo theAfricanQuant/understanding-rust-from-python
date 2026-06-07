@@ -1,0 +1,394 @@
+---
+title: "Lesson 06 — Ownership & Borrowing"
+subtitle: "Rust from Python — verbose explainer"
+date: "2026-06-07"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: false
+    code-tools: true
+    embed-resources: true
+    theme: cosmo
+topic: "Ownership & Borrowing"
+date_completed: "2026-06-07"
+date_display: "7th June, 2026"
+status: "done"
+rustlings_source: "exercises/06_move_semantics/move_semantics1-5.rs"
+---
+
+# Lesson 06 — Ownership & Borrowing
+
+> **Python first, Rust second, side by side, into the weeds.**
+
+This is *the* lesson. The thing that makes Rust Rust. The thing that has no equivalent in Python.
+
+Everything you've learned so far — `if` as an expression, `break` with a value, `for` choosing borrow vs consume — exists because of ownership. After this lesson, all those earlier "why" questions get answered.
+
+---
+
+## 1. What ownership is (and why Python doesn't have it)
+
+**Ownership** is Rust's system for managing memory without a garbage collector.
+
+In **Python**, the interpreter tracks reference counts. When an object's count hits zero, it's garbage-collected. You never think about it.
+
+```python
+x = [1, 2, 3]      # refcount: 1
+y = x               # refcount: 2
+del x               # refcount: 1 (still alive via y)
+```
+
+Python's runtime does the bookkeeping. You don't pay attention until you get bitten by shared mutation (lesson 05's `for` loop surprise).
+
+In **Rust**, there is no runtime, no GC, no refcount. The **compiler** tracks who owns every value. It does this at compile time — zero runtime cost.
+
+```rust
+let x = vec![1, 2, 3];  // x owns the Vec
+let y = x;               // ownership MOVES to y — x is now dead
+// println!("{x:?}");    // ❌ compile error: use of moved value
+```
+
+The compiler catches it before the program runs. No runtime check. No overhead. Full safety.
+
+---
+
+## 2. Story 1: "The library book" — Ownership
+
+You walk into a library. You check out a book. The librarian hands it to you.
+
+**You are the owner.**  
+
+When you walk out of the library, you still have it. When you go home and go to sleep (your scope ends), the book is still on your nightstand. But the next morning, if you leave the house — the book stays. You can't take it into another scope without transferring ownership.
+
+That's the mental model:
+
+- **Each value has exactly one owner.** Just like a checked-out book: one person at a time.
+- **When the owner goes out of scope, the value is dropped.** Like returning the book when you leave.
+- **To give it to someone else, you *move* it.** You hand the book to a friend. Now they're the owner. You can't read it anymore.
+
+### What Rust does (moving a book)
+
+```rust
+let h1 = String::from("Rust Book");  // h1 owns the String
+let h2 = h1;                          // ownership moves to h2
+// println!("{h1}");                   // ❌ h1 is dead — you no longer own it
+println!("{h2}");                      // ✅ h2 is the owner
+```
+
+This is the core shock for Pythonistas. In Python `h2 = h1` means both refer to the same object. In Rust it means "the value has moved." The compiler enforces this.
+
+### What Python does (no ownership, just references)
+
+```python
+h1 = "Rust Book"
+h2 = h1           # Python: both point to the same string
+print(h1)          # ✅ fine — no concept of "move" for strings
+print(h2)          # ✅ fine
+```
+
+Python lets both live. That's convenient — but it means Python needs a garbage collector to clean up when both references are gone. Rust doesn't.
+
+### What if you want both to live?
+
+You clone the book:
+
+```rust
+let h1 = String::from("Rust Book");
+let h2 = h1.clone();     // ← explicit deep copy
+println!("{h1}");         // ✅ both alive
+println!("{h2}");         // ✅ independent copy
+```
+
+`.clone()` makes a full copy. You pay for it explicitly. No hidden copies.
+
+### What about integers?
+
+```rust
+let x: i32 = 42;
+let y = x;                // ← NOT a move — it's a Copy
+println!("{x}");           // ✅ both alive
+println!("{y}");
+```
+
+Integers (and other stack-only types) implement `Copy`. Assigning them copies the bits. No move, no ownership transfer, no surprise.
+
+---
+
+## 3. Story 2: "The contractor with the only key" — Borrowing
+
+You own a house. Someone wants to visit it.
+
+You have two options:
+
+1. **Immutable borrow (`&T`)** — give them a viewing key. They can look around, take photos, but they can't change anything. You can give this key to 10 people at the same time — they all look, no one touches.
+
+2. **Mutable borrow (`&mut T`)** — give them a contractor key. They can renovate: knock down walls, paint, change the kitchen. But there's only one contractor key. While the contractor works, you can't even enter your own house. No other keys can be out.
+
+### Code: looking around (immutable borrow)
+
+```rust
+fn view(house: &House) {
+    println!("Visitor sees: {house:?}");
+    // can READ house data, cannot modify it
+}
+
+let house = House { name: String::from("Green House") };
+view(&house);                   // ← borrow. house is NOT moved.
+println!("Owner still has it: {house:?}");  // ✅ alive
+```
+
+### Code: renovating (mutable borrow)
+
+```rust
+fn renovate(house: &mut House) {
+    house.name.push_str(" (renovated)");
+}
+
+let mut house = House { name: String::from("White House") };
+renovate(&mut house);                      // ← mutable borrow
+println!("{house:?}");                      // ✅ "White House (renovated)"
+```
+
+### The golden rule
+
+> At any time, you can have **either** one mutable reference **or** any number of immutable references — but **not both**.
+
+```rust
+let r1 = &house;     // viewing key #1
+let r2 = &house;     // viewing key #2 — fine, both immutable
+// let r3 = &mut house;  // ❌ can't give contractor key while guests are inside
+println!("{r1} {r2}");
+
+// Once r1 and r2 are no longer used:
+let r3 = &mut house;  // ✅ all guests left, contractor can enter
+```
+
+**Why this rule?** It prevents data races at compile time. If you're reading a value while someone else is writing to it (in another thread), the result is unpredictable. Rust says: "Don't let it happen — enforce it at compile time."
+
+Python doesn't have this rule. You can mutate a list from 10 different places without compile-time errors — but you get runtime bugs instead.
+
+---
+
+## 4. Story 3: "The Post-it vs the house" — Copy vs Move
+
+Some values are light. Some values are heavy.
+
+An **integer** is a Post-it note. Writing `let y = x;` for an integer is like writing "42" on a second Post-it. It's fast, it's cheap, you get a fresh copy. No one cares.
+
+```rust
+let x: i32 = 42;
+let y = x;          // just copies the bits. x is still alive.
+```
+
+A **String** or **Vec** is a house. It has a front door (a pointer on the stack) and actual rooms (data on the heap). Writing `let y = x;` for a String would need to duplicate the entire house. That's expensive.
+
+Rust says: instead of secretly copying the house, I'll **move** it. You get the deed. The old owner can't use it.
+
+```rust
+let x = String::from("hello");  // x owns the house
+let y = x;                       // x moves out, y moves in
+// println!("{x}");               // ❌ x is no longer the owner
+```
+
+**What if you DO want a copy?** Pay for it explicitly:
+
+```rust
+let x = String::from("hello");
+let y = x.clone();               // ← explicit: "yes, I want a full house copy"
+println!("{x}");                  // ✅ still alive
+```
+
+### The Copy trait
+
+Types that live entirely on the stack implement `Copy`. When you assign them, they copy automatically:
+
+| Type | Behaves like | Method | After `let y = x;` |
+|---|---|---|---|
+| `i32`, `u32`, `f64`, `bool`, `char` | Post-it | **Copy** | x and y both alive |
+| `String`, `Vec<T>`, custom structs | House | **Move** | x is dead |
+| tuples of Copy types: `(i32, bool)` | Stack-only | **Copy** | x and y both alive |
+
+**Python has no equivalent.** Every Python assignment is a reference — not a copy and not a move. Python is always "₦200,000 always" (the reference is cheap, but the GC has to clean up).
+
+---
+
+## 5. The big insight for Pythonistas
+
+**Python assignment:** creates an alias. Two names, one object. The GC tracks when to clean up.
+
+**Rust assignment:** transfers ownership or copies. The compiler tracks it all.
+
+| | Python | Rust |
+|---|---|---|
+| `y = x` (list/string) | both point to the same data | **move** — x is dead |
+| `y = x` (int) | both point to the same int | **copy** — ints are Copy |
+| `y = x.copy()`, `y = x.clone()` | explicit copy | same — `.clone()` |
+| Multiple names for same object | ✅ always allowed | ❌ only via `&` (borrow) |
+| Fix for shared mutation | `copy()` or `deepcopy()` | borrow with `&` |
+| Memory cleanup | GC at runtime | **Drop** at compile-tracked scope exit |
+
+---
+
+## 6. Move semantics in code
+
+```rust
+fn main() {
+    let s1 = String::from("hello");
+    let s2 = s1;      // s1 MOVES into s2
+
+    // println!("{s1}");  // ❌ use of moved value
+    println!("{s2}");     // ✅ s2 is the owner now
+}
+```
+
+When `s2` goes out of scope, the String's memory is freed. `s1` is long gone — the compiler knows it, and won't let you touch it.
+
+**In Python:**
+
+```python
+s1 = "hello"
+s2 = s1
+print(s1)    # ✅ fine — both still point to the same string
+```
+
+---
+
+## 7. Clone
+
+```rust
+let s1 = String::from("hello");
+let s2 = s1.clone();     // deep copy — both alive
+println!("{s1} {s2}");   // ✅
+```
+
+`.clone()` is the escape hatch. It's explicit — you can see where copies happen. No hidden performance cost.
+
+---
+
+## 8. Copy types
+
+Stack-only types don't move — they copy:
+
+```rust
+let x = 42;
+let y = x;           // copy, not move
+println!("{x} {y}"); // ✅ both alive
+```
+
+If a type implements the `Copy` trait, assignment is a bitwise copy. Types that own heap data (like `String`, `Vec`) CANNOT implement `Copy` — because copying would duplicate the pointer, leading to double-free.
+
+---
+
+## 9. Borrowing (`&T`)
+
+A reference lets you **read** a value without taking ownership:
+
+```rust
+fn get_length(s: &String) -> usize {
+    s.len()
+}   // s (the reference) goes out of scope — but the String lives on
+
+fn main() {
+    let s = String::from("hello");
+    let len = get_length(&s);  // borrow, not move
+    println!("{s} is {len} long");  // ✅ s is alive
+}
+```
+
+Without the `&`, `get_length(s)` would move `s` into the function, and you'd never see it again.
+
+---
+
+## 10. Mutable borrowing (`&mut T`)
+
+A mutable reference lets you **read and write**:
+
+```rust
+fn add_world(s: &mut String) {
+    s.push_str(" world");
+}
+
+fn main() {
+    let mut s = String::from("hello");
+    add_world(&mut s);
+    println!("{s}");  // "hello world"
+}
+```
+
+**The critical constraint:** only one `&mut` can exist at a time, and no `&` can coexist with an active `&mut`.
+
+```rust
+let mut x = 5;
+
+let r1 = &x;       // ✅ one immutable
+let r2 = &x;       // ✅ two immutable
+// let r3 = &mut x; // ❌ can't mutably borrow while immutably borrowed
+println!("{r1} {r2}");
+
+// Once r1/r2 are last-used:
+let r3 = &mut x;   // ✅ no active immutable borrows
+```
+
+The compiler tracks the *lifetime* of each borrow — from creation to last use. Not the whole scope.
+
+---
+
+## 11. Slices — borrowed views
+
+A slice is a **borrowed view** into a contiguous array of values:
+
+```rust
+let arr: [i32; 5] = [10, 20, 30, 40, 50];
+let slice: &[i32] = &arr[1..4];   // view of [20, 30, 40]
+
+println!("arr: {arr:?}");          // owner still alive
+println!("slice: {slice:?}");      // borrower
+```
+
+Slices are to arrays what `&str` is to `String`: a non-owning view. You can use the data without owning it.
+
+---
+
+## 12. The 5 move_semantics exercises (walkthrough)
+
+| Exercise | What to fix | Why |
+|---|---|---|
+| **ms1** | `let mut vec = vec;` | `vec` must be mutable to call `push` |
+| **ms2** | `vec0.clone()` before passing to `fill_vec` | `fill_vec` takes ownership — need a clone to keep `vec0` alive |
+| **ms3** | `mut vec: Vec<i32>` in function signature | Make the parameter itself mutable |
+| **ms4** | Reorder: use `y` before creating `z` | Two `&mut` references to `x` can't coexist — use one, drop it, then create the other |
+| **ms5** | `get_char` takes `&String` (borrow), `string_uppercase` takes `String` (owned) | Match signatures to whether the function should consume or borrow |
+
+---
+
+## 13. Try it yourself
+
+1. **Run the cargo version:**
+   ```bash
+   cd /home/siseng/Documents/programing_languages/Rust/rust-from-python/playground
+   cargo run --bin 06_ownership
+   ```
+
+2. **Break it on purpose:** open the Rust file, remove the `&` from `look_at(&house)`. Read the "use of moved value" error. Then add `.clone()` instead. Both the original and the clone stay alive.
+
+3. **Break the borrow rules:** try to print `r1` AFTER creating `r3 = &mut s` in `demo_borrow_checker()`. Read the borrow checker error.
+
+4. **Write from scratch:** a function that takes a `String`, appends `"!"` to it, and returns the length — using borrowing, not ownership.
+
+5. **Solve the move_semantics exercises:** in the rustlings folder, run each exercise and fix the compiler error.
+
+---
+
+## 14. Further reading
+
+- **The Rust Book, ch. 4** — [Ownership](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html). The must-read. All 3 sections: ownership, references, slices.
+- **Rust by Example: Ownership & Move** — https://doc.rust-lang.org/rust-by-example/scope/move.html
+- **Rust by Example: Borrowing** — https://doc.rust-lang.org/rust-by-example/scope/borrow.html
+
+---
+
+## 15. What's next
+
+- **Lesson 07** — Structs & enums: building your own types. Now that you understand ownership, you can see why struct fields have ownership, why references in structs need lifetimes, and how `enum Option<T>` is a safer `None`.
+- **Lesson 08** — Error handling: `Result<T, E>` and `match` — Rust's way of handling failures without exceptions.
