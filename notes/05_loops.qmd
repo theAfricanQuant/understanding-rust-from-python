@@ -1,0 +1,398 @@
+---
+title: "Lesson 05 — Loops"
+subtitle: "Rust from Python — verbose explainer"
+date: "2026-06-07"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: false
+    code-tools: true
+    embed-resources: true
+    theme: cosmo
+topic: "Loops"
+date_completed: "2026-06-07"
+date_display: "7th June, 2026"
+status: "done"
+---
+
+# Lesson 05 — Loops
+
+> **Python first, Rust second, side by side, into the weeds.**
+
+Loops are where Python and Rust share the most vocabulary — `while`, `for`, `break`, `continue` all exist in both — but Rust adds two tricks Python doesn't have: **`break` with a value** and **loop labels**. And one Python feature Rust lacks: `for..else`.
+
+---
+
+## 1. The loop landscape
+
+| Concept | Python | Rust |
+|---|---|---|
+| Infinite loop | `while True:` | `loop` |
+| Condition loop | `while cond:` | `while cond {}` |
+| Range loop | `for i in range(n):` | `for i in 0..n {}` |
+| Collection loop | `for x in items:` | `for x in &items {}` |
+| Early exit | `break` | `break` (+ can carry a value) |
+| Skip iteration | `continue` | `continue` |
+| Loop label for nested break | not available | `'label: loop { break 'label; }` |
+| Post-loop no-break action | `for..else:` | not available (use a flag) |
+
+The basics (`while`, `for`, `break`, `continue`) work the same way. The differences are in `loop`, break-with-value, labels, and ownership.
+
+---
+
+## 2. Story 1: "The broken microwave" — why Rust has `loop`
+
+Imagine a microwave. You press the defrost button. The microwave heats for 2 minutes, then opens the door and stops. In Python, you'd write:
+
+```python
+while door_closed:
+    heat()
+```
+
+But what controls `door_closed`? The microwave itself? A sensor? In practice, you probably meant:
+
+```python
+while True:        # I mean... forever until someone opens the door
+    if door_open:
+        break
+    heat()
+```
+
+What if someone changes `door_closed` to a `Timer` object by accident? The while condition isn't checked for type. Python would crash at runtime.
+
+**Rust says: be honest.**
+
+```rust
+loop {
+    if door_open { break; }
+    heat();
+}
+```
+
+`loop` doesn't have a condition because **there is no condition**. You will break explicitly or you won't break at all. It's the compiler saying: "I trust you. When you're ready to stop, `break`."
+
+It's also the *only* loop type in Rust that can return a value — which brings us to story 2.
+
+---
+
+## 3. Story 2: "The delivery driver who needed a receipt"
+
+A pizza delivery driver is given a list of addresses. Instructions: "Deliver pizzas until you find apartment 42, then bring back the receipt number."
+
+**Python version:**
+
+```python
+receipt = None                     # ← empty variable declared OUTSIDE
+while True:
+    apartment = get_next_address()
+    if apartment == 42:
+        receipt = 101               # ← assign INSIDE, then break
+        break
+```
+
+Two lines of scaffolding (`receipt = None`, then `receipt = ...`) just to carry one value out of the loop. A Pythonista doesn't blink at this — but it's ceremony. The value exists inside the loop and you need an external bag to carry it out.
+
+**Rust version:**
+
+```rust
+let receipt: u32 = loop {
+    let apartment = get_next_address();
+    if apartment == 42 {
+        break 101;                  // ← break IS the return
+    }
+};
+```
+
+No external variable. The loop block *is* the value. The `break 101` says: "I'm done, and here's the answer."
+
+**The rule:** only `loop` supports break with a value. `while` and `for` do not. If you try:
+
+```rust
+let x = while cond { break 42; };   // ❌ ERROR: can't break with value in while
+```
+
+The compiler catches it. `loop` is the only loop that can return a value — which makes sense: `loop` has no condition to manage, so the only way out is `break`, and that break can carry data.
+
+### What the pizza story looks like — code only
+
+**Python:**
+```python
+receipt = None
+while True:
+    apt = deliver()
+    if apt == 42:
+        receipt = 101
+        break
+print(receipt)   # 101
+```
+
+**Rust:**
+```rust
+let receipt = loop {
+    if deliver() == 42 { break 101; }
+};
+println!("{receipt}");   // 101
+```
+
+Same logic. One less variable. The loop *is* the value.
+
+---
+
+## 4. `while` — the familiar one
+
+`while` works the same as Python: check condition, run body, check again.
+
+```rust
+let mut n = 3;
+while n > 0 {
+    println!("{n}");
+    n -= 1;
+}
+```
+
+**But:** the condition must be `bool` (same rule as `if` from lesson 04).
+
+```rust
+while n { }          // ❌ ERROR: expected `bool`, found integer
+while n != 0 { }     // ✅
+```
+
+**Python:**
+```python
+n = 3
+while n:
+    print(n)
+    n -= 1
+```
+
+The Python version works because `0` is falsy. Rust requires `n != 0`.
+
+---
+
+## 5. `for` over ranges
+
+**Python:**
+```python
+for i in range(3):
+    print(i)       # 0, 1, 2
+```
+
+**Rust:**
+```rust
+for i in 0..3 {
+    println!("{i}");   // 0, 1, 2
+}
+```
+
+`0..3` is a *range*. The `..` is exclusive (0 up to but not including 3). For inclusive, use `..=`:
+
+```rust
+for i in 0..=3 {
+    println!("{i}");   // 0, 1, 2, 3
+}
+```
+
+**Python doesn't have this.** Python uses `range(start, stop, step)` — a function call. Rust uses `..` — a built-in range expression. It's shorter and the compiler knows about it.
+
+---
+
+## 6. `for` over collections — the ownership fork in the road
+
+This is where Pythonists must pay attention.
+
+**Python:**
+```python
+items = ["a", "b", "c"]
+for item in items:
+    print(item)
+print(items)       # ✅ still works — Python never consumes
+```
+
+**Rust — borrowing (safe, non-consuming):**
+```rust
+let items = ["a", "b", "c"];
+for item in &items {        // ← &items = borrow
+    println!("{item}");
+}
+println!("{:?}", items);    // ✅ still usable
+```
+
+**Rust — consuming (items is moved):**
+```rust
+let items = ["a", "b", "c"];
+for item in items {         // ← items (no &) = consume
+    println!("{item}");
+}
+// println!("{:?}", items); // ❌ ERROR: use of moved value
+```
+
+**Why does Rust care?** Ownership (lesson 06). For now, remember:
+- `for x in &collection {}` — borrow (can use collection after)
+- `for x in collection {}` — consume (collection is gone)
+
+Python always borrows. Rust makes you choose.
+
+### What the choice looks like: "The conveyor belt"
+
+Imagine boxes on a conveyor belt:
+
+- Python: you look into each box and leave it on the belt. All boxes are still there.
+- Rust `&`: you look into each box and leave it on the belt. All boxes still there (borrowing).
+- Rust (no `&`): you pick up each box and take it off the belt. You own it now. The belt is empty (consuming).
+
+Both are valid. The difference is you decide in Rust; Python decides for you.
+
+---
+
+## 7. `break` and `continue`
+
+Same as Python — no surprises.
+
+```rust
+for i in 0..5 {
+    if i % 2 == 0 {
+        continue;       // skip evens
+    }
+    if i == 5 {
+        break;          // exit early (never reached here)
+    }
+    println!("{i}");    // 1, 3
+}
+```
+
+**Python:**
+```python
+for i in range(5):
+    if i % 2 == 0:
+        continue
+    if i == 5:
+        break
+    print(i)            # 1, 3
+```
+
+Identical. `continue` skips the rest of the body, `break` exits the loop.
+
+---
+
+## 8. Loop labels — breaking out of nested loops
+
+Python cannot break an outer loop from inside an inner loop without a workaround:
+
+```python
+# Python — need a flag variable
+found = False
+for i in range(3):
+    for j in range(3):
+        if i == 1 and j == 1:
+            found = True
+            break
+    if found:
+        break
+```
+
+That's 3 extra lines for something that in Rust is a single keyword:
+
+```rust
+'outer: for i in 0..3 {
+    for j in 0..3 {
+        if i == 1 && j == 1 {
+            break 'outer;          // ← breaks BOTH loops at once
+        }
+    }
+}
+```
+
+The `'outer:` is a *loop label*. It names the loop so `break` knows which one to exit. Labels can be attached to any loop (`loop`, `while`, `for`).
+
+**Syntax:** label names start with `'` (apostrophe), are `snake_case`, and end with `:`.
+
+**Python has no equivalent.** You need flags or exceptions — but `break 'outer` is cleaner than both.
+
+---
+
+## 9. What Python has that Rust doesn't: `for..else`
+
+Python's `for..else` runs the `else` block only if the loop completed *without* hitting `break`.
+
+```python
+for i in range(3):
+    if i > 5:
+        break
+else:
+    print("no break occurred")   # ← runs because we never hit the break
+```
+
+If you hit `break`, the `else` is skipped. It's a Python idiom for "no match found" in search loops.
+
+**Rust has no equivalent.** You write an explicit flag:
+
+```rust
+let mut broke = false;
+for i in 0..3 {
+    if i > 5 {
+        broke = true;
+        break;
+    }
+}
+if !broke {
+    println!("no break occurred");
+}
+```
+
+It's more verbose but unambiguous.
+
+---
+
+## 10. The 5 rules of Rust loops (cheat sheet)
+
+| # | Rule |
+|---|---|
+| 1 | `loop` is infinite; `while` has a condition; `for` iterates |
+| 2 | Only `loop` supports `break` with a value (`break val`) |
+| 3 | Conditions in `while` and `if` must be `bool` |
+| 4 | `for x in &collection {}` borrows; `for x in collection {}` consumes |
+| 5 | Loop labels (`'name:`) allow `break` to target outer loops |
+
+---
+
+## 11. Try it yourself
+
+1. **Run the cargo version:**
+   ```bash
+   cd /home/siseng/Documents/programing_languages/Rust/rust-from-python/playground
+   cargo run --bin 05_loops
+   ```
+   You should see 9 sections, all printing clean output.
+
+2. **Break it on purpose:** in the Rust file, change `for item in &items` to `for item in items`. Then try to `println!("{:?}", items)` after the loop. Read the compiler error about moved values.
+
+3. **Write a search loop:** write a function `find_index(items: &[i32], target: i32) -> Option<usize>` that:
+   - Uses `for` with `.iter().enumerate()`
+   - Uses `break` with a value to return the index
+   - Returns `None` if not found
+   - Uses a `loop` and `break` with value
+
+4. **Translate this Python pattern to Rust:**
+   ```python
+   for i in range(10):
+       if i == 5:
+           break
+   else:
+       print("not found")
+   ```
+
+---
+
+## 12. Further reading
+
+- **The Rust Book, ch. 3.5** — [Control Flow](https://doc.rust-lang.org/book/ch03-05-control-flow.html#repetition-with-loops). Loops section — covers `loop`, `while`, `for`, break-with-value, and labels.
+- **Rust by Example: Loops** — https://doc.rust-lang.org/rust-by-example/flow_control/loop.html. Small, focused examples.
+- **The Rust Book, ch. 4** — [Ownership](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html). Prerequisite for why `for x in items` consumes the collection.
+
+---
+
+## 13. What's next
+
+- **Lesson 06** — Ownership & borrowing: the big one. Why Rust forces you to choose borrow vs consume in `for` loops. Why `break` with value is safe. Everything clicks after this.
+- **Lesson 12** — `match`: the next control flow tool. Think of it as `if/else` on steroids — pattern matching that can destructure any value.

@@ -18,3 +18,7 @@ path = "src/bin/03_functions.rs"
 [[bin]]
 name = "04_if_else"
 path = "src/bin/04_if_else.rs"
+
+[[bin]]
+name = "05_loops"
+path = "src/bin/05_loops.rs"

@@ -8,7 +8,7 @@ A learning journal: **side-by-side Python and Rust**, built from a Pythonista's 
 
 | Folder | What's in it |
 |---|---|
-| `learn-rust.qmd` | The side-by-side lesson document (render with Quarto) |
+| `notes/` | Rendered `.qmd` lesson explainers (one per lesson, render to standalone HTML) |
 | `python/` | Python reference scripts (one per lesson) |
 | `rust/` | Plain `.rs` files (compile with `rustc`) |
 | `playground/` | Cargo multi-bin project (`cargo run --bin XX_name`) |
@@ -28,8 +28,8 @@ cd playground && cargo run --bin 01_hello && cd ..
 # Rust standalone
 rustc rust/01_hello.rs -o /tmp/h && /tmp/h
 
-# Render the doc
-quarto render learn-rust.qmd --to html
+# Render a lesson
+uv run quarto render notes/XX_topic.qmd --to html
 ```
 
 ## Lessons done so far
@@ -40,7 +40,7 @@ quarto render learn-rust.qmd --to html
 | 02 | Variables (`let`, `mut`, types, shadowing, `const`) | 5th June, 2026 | ✅ done |
 | 03 | Functions | 6th June, 2026 | ✅ done |
 | 04 | If/else (expression, bool-only, same-type branches) | 6th June, 2026 | ✅ done |
-| 05 | Loops | — | ⬜ pending |
+| 05 | Loops (loop, while, for, break with value, labels) | 7th June, 2026 | ✅ done |
 | 06 | Ownership & borrowing | — | ⬜ pending |
 | 07 | Structs & enums | — | ⬜ pending |
 | 08 | Error handling | — | ⬜ pending |

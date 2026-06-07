@@ -4,82 +4,64 @@
 >
 > For full project context (architecture, conventions, resources, roadmap), see [`AGENTS.md`](./AGENTS.md).
 
-**Last updated:** 5th June, 2026
+**Last updated:** 7th June, 2026
 
 ---
 
-## Currently in progress
-
-**Lesson 03 — Functions** (started 5th June, 2026)
-
-The user asked to "go into the weeds" — verbose explanations wanted, all 5 rustlings exercises covered, Python parallels throughout.
-
----
-
-## ✅ Done for lesson 03
-
-| # | File | Status |
-|---|---|---|
-| 1 | `python/03_functions.py` | ✅ written + tested, runs cleanly |
-| 2 | `rust/03_functions.rs` | ✅ written + tested with `rustc` |
-| 3 | `playground/src/bin/03_functions.rs` | ✅ written + tested with `cargo run --bin 03_functions` |
-| 4 | `playground/Cargo.toml` | ✅ added `[[bin]]` entry for 03_functions |
-| 5 | `notes/03_functions-quickref.md` | ✅ written — one-page cheatsheet, run commands, common errors |
-| 6 | `notes/03_functions.qmd` (was `.md`) | ✅ written + rendered to HTML — 12 sections, into the weeds |
-| 7 | `README.md` progress table | ✅ marked lesson 03 done with date `6th June, 2026` |
-
-**Lesson 03 effectively complete (7/8 items).** Just needs the final commit.
-
----
-
-## ❌ Still to do for lesson 03
-
-| # | File | What it needs |
-|---|---|---|
-| ~~7~~ | ~~`learn-rust.qmd` side-by-side section~~ | **REMOVED** — user decided 6th June 2026 to drop the combined doc. Each lesson is its own self-contained `.qmd` in `notes/`. |
-| 8 | `git commit` + `git push` | Final lesson 03 commit |
-
----
-
-## Pattern change (6th June, 2026)
-
-**Old per-lesson pattern (9 items):** ... included adding a section to `learn-rust.qmd`.
-**New per-lesson pattern (8 items):** drop the combined doc. Just one `.qmd` per lesson in `notes/`.
-
-See `AGENTS.md` for the updated 8-item checklist.
-
----
-
-## Resume command
-
-Next time, the assistant should:
-1. Read this file (STATE.md) AND AGENTS.md for full context
-2. Continue with the lesson 03 final commit
-3. Then move to lesson 04 (control flow: if/else + match)
-
----
-
-## Lessons fully done (committed + pushed)
+## ✅ Fully done (committed + pushed)
 
 - **Lesson 01** — Hello World ✅ 5th June, 2026
 - **Lesson 02** — Variables ✅ 5th June, 2026
+- **Lesson 03** — Functions ✅ 6th June, 2026
+- **Lesson 04** — If/else ✅ 6th June, 2026
+- **Lesson 05** — Loops ✅ 7th June, 2026
 
-## Other completed setup work
+---
+
+## Next up
+
+**Lesson 06 — Ownership & borrowing**, the foundational Rust concept that explains everything else (why `for x in items` consumes, why `&` matters, why `break` with value is safe). This is the hardest lesson for Pythonistas — plan to spend the most time here.
+
+---
+
+## Per-lesson checklist (8 items)
+
+| # | File | Status |
+|---|---|---|
+| 1 | `python/XX_topic.py` | ✅ |
+| 2 | `rust/XX_topic.rs` | ✅ |
+| 3 | `playground/src/bin/XX_topic.rs` | ✅ |
+| 4 | `playground/Cargo.toml` [[bin]] | ✅ |
+| 5 | `notes/XX_topic-quickref.md` | ✅ |
+| 6 | `notes/XX_topic.qmd` (render to HTML) | ✅ |
+| 7 | `README.md` progress table | ✅ |
+| 8 | Git commit + push | ✅ |
+
+---
+
+## Other setup
 
 - Repo pushed to `git@github.com:theAfricanQuant/rust-from-python.git`
-- `pyproject.toml` + `uv.lock` (currently no Python deps — stdlib only)
+- `pyproject.toml` + `uv.lock` (no Python deps — stdlib only)
 - `SETUP.md` (first-time clone instructions)
 - `notes/running-rust.qmd` (`cargo` vs `rustc` explained with Python parallels)
-- All 4 qmd files in `notes/` render to standalone HTML (no jupyter, no execution)
+- All `.qmd` files render to standalone HTML (no jupyter, no execution)
+- All `.html` and `_files/` directories gitignored; `*.pdf` gitignored
+- `docs/speed_up_your_Python_with_Rust.md` tracked, `.pdf` version gitignored
 
-## Decisions made / open questions
+---
 
-- **No jupyter, no execution in qmd** (decision 6th June 2026). .qmd files render to plain HTML. Code is run via `cargo`/`uv run python`/`rustc`. Cleaner, faster, fewer moving parts.
-- **No combined `learn-rust.qmd` doc** (decision 6th June 2026). Each lesson is its own self-contained `.qmd` in `notes/`.
-- **Date format:** Human-friendly `5th June, 2026` for display, ISO `2026-06-05` in YAML. Both kept in `date_display` and `date_completed` fields.
-- **Per-lesson update pattern (8 files + commit + push):** Established and used for lessons 01, 02, 03.
+## Committed state (lesson 05)
 
-## Out of scope (mention only if user asks)
-
-- `play/` folder at parent level (old, single-bin cargo project — can be deleted any time)
-- `rustlings/` folder at parent level (cloned rustlings exercises, used as reference for the lesson content, not run anymore)
+- `python/05_loops.py` — 9 functions, Python-only features (for..else) highlighted
+- `rust/05_loops.rs` — 9 functions, Rust-only features (break with value, labels) highlighted
+- `playground/src/bin/05_loops.rs` — cargo bin copy
+- `playground/Cargo.toml` — has `[[bin]] name = "05_loops"`
+- `notes/05_loops-quickref.md` — one-pager
+- `notes/05_loops.qmd` — rendered to HTML, 13 sections with 2 stories:
+  - §2: "The broken microwave" — why Rust has `loop` instead of `while True`
+  - §3: "The delivery driver who needed a receipt" — `break` with a value
+  - §6: Ownership fork — borrow vs consume in `for` loops
+  - §8: Loop labels — `'outer: break 'outer` for nested loop breaks
+- `README.md` — lesson 05 marked done, outdated references cleaned
+- `AGENTS.md` — progress table + last-updated date updated

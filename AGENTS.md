@@ -18,7 +18,7 @@ A personal learning journal: **learning Rust from a Pythonista's perspective**, 
 
 ## Current state at a glance
 
-**Last updated:** 6th June, 2026
+**Last updated:** 7th June, 2026
 
 | Lesson | Topic | Status | Date completed |
 |---|---|---|---|
@@ -26,7 +26,7 @@ A personal learning journal: **learning Rust from a Pythonista's perspective**, 
 | 02 | Variables | ✅ done | 5th June, 2026 |
 | 03 | Functions | ✅ done | 6th June, 2026 |
 | 04 | If/else | ✅ done | 6th June, 2026 |
-| 05 | Loops | ⬜ pending | — |
+| 05 | Loops | ✅ done | 7th June, 2026 |
 | 06 | Ownership & borrowing | ⬜ pending | — |
 | 07 | Structs & enums | ⬜ pending | — |
 | 08 | Error handling | ⬜ pending | — |
