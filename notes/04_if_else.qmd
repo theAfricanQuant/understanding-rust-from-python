@@ -180,7 +180,65 @@ error[E0308]: `if` and `else` have incompatible types
 
 ---
 
-## 5. The 3 rustlings exercises, walked through
+## 5. A story: "I ordered a pizza, not a Tesla"
+
+You walk into a pizzeria. You tell the cashier: **"I'll have a pizza."**
+
+That's your type annotation. `let food: Pizza`. You have declared what you expect. The cashier now knows: whatever comes next must be a `Pizza`.
+
+The cashier asks: "Cheese or pepperoni?"
+That's the if/else. `if vegetarian { Cheese } else { Pepperoni }`.
+Both branches: `Pizza`. Fine. The night continues.
+
+But what if the conversation went differently?
+
+> **You:** "I'll have a pizza."  
+> **Cashier:** "If you're vegetarian, I'll give you cheese pizza. Otherwise, a Tesla."  
+> **You:** "A Tesla? I said pizza. You can't serve me a car."
+
+That's the Rust compiler. The type annotation `: Pizza` is the contract you made upfront. The cashier tried to hand you a `Tesla` in one branch — different type, rejected at the counter.
+
+### Now the same story in code
+
+```rust
+// Version 1 — both branches agree, cashier is happy
+let food: Pizza = if vegetarian { Pizza::Cheese } else { Pizza::Pepperoni };
+
+// Version 2 — else-branch is a Tesla, cashier rejects
+let food: Pizza = if vegetarian { Pizza::Cheese } else { Tesla::Model3 };
+// ❌ ERROR: expected `Pizza`, found `Tesla`
+```
+
+The explicit `: Pizza` catches the mismatch right at the `let`. Without it:
+
+```rust
+// No annotation — Rust guesses from the branches
+let food = if vegetarian { Pizza::Cheese } else { Tesla::Model3 };
+// ERROR: if and else have incompatible types
+//        Rust looks at both branches and says "pick one type or the other"
+```
+
+Without `: Pizza`, the error is "if/else branches disagree." With `: Pizza`, the error is more direct: "you promised a Pizza but tried to return a Tesla." **Explicit annotations move the error closer to the root cause.**
+
+### Why this matters in a real project
+
+Remember the ripgrep examples:
+
+```rust
+let path_terminator: Option<u8> = if low.null { Some(b'\x00') } else { None };
+```
+
+If someone came along and changed the `else` branch to return `false` (a `bool`) instead of `None` (an `Option<u8>`):
+
+```rust
+// Someone's typo:
+let path_terminator: Option<u8> = if low.null { Some(b'\x00') } else { false };
+// ❌ ERROR: expected Option<u8>, found bool
+```
+
+With the explicit `: Option<u8>` annotation, the compiler flags it immediately. The `: Option<u8>` is your written order: "I expect an Optional byte, not a boolean." Without it, you'd get the vaguer "if/else branches disagree" — still caught, but at one more level of indirection.
+
+**The moral:** an explicit type annotation is the upfront contract. The if/else expression must deliver on it — every branch, no exceptions.
 
 ### if1 — "Complete the function to return the bigger number"
 
@@ -380,7 +438,7 @@ But then `if identifier == 1` wouldn't work — you'd compare to `"1"`. The orig
 
 ---
 
-## 6. `else if` (not `elif`)
+## 7. `else if` (not `elif`)
 
 Python has `elif`. Rust does not — it has `else if` (two words). Same thing, different spelling.
 
@@ -409,7 +467,7 @@ if x > 0 {
 
 ---
 
-## 7. If without an else (statement form)
+## 8. If without an else (statement form)
 
 You don't have to use `if` as an expression. If you omit the `else` branch, the whole if becomes a statement:
 
@@ -428,7 +486,7 @@ println!("done");
 
 ---
 
-## 8. Nested if
+## 9. Nested if
 
 You can nest if inside if:
 
@@ -450,7 +508,7 @@ if n != 0 {
 
 ---
 
-## 9. The 5 rules of Rust if/else (cheat sheet)
+## 10. The 5 rules of Rust if/else (cheat sheet)
 
 | Rule | Python | Rust |
 |---|---|---|
@@ -462,7 +520,7 @@ if n != 0 {
 
 ---
 
-## 10. Common compile errors you'll hit (and what they mean)
+## 11. Common compile errors you'll hit (and what they mean)
 
 | Error | What you did wrong | Fix |
 |---|---|---|
@@ -477,7 +535,7 @@ if n != 0 {
 
 ---
 
-## 11. Try it yourself
+## 12. Try it yourself
 
 1. **Run the cargo version:**
    ```bash
@@ -498,14 +556,14 @@ if n != 0 {
 
 ---
 
-## 12. Further reading
+## 13. Further reading
 
 - **The Rust Book, ch. 3.5** — [Control Flow](https://doc.rust-lang.org/book/ch03-05-control-flow.html#if-expressions). The official source, covers `if` and the upcoming `loop`/`while`/`for`.
 - **W3Schools Rust If..Else** — https://www.w3schools.com/rust/rust_if_else.php. Same content, browser-playable examples.
 - **Rust by Example, if/else** — https://doc.rust-lang.org/rust-by-example/flow_control/if_else.html. Small examples.
 - **Microsoft Python→Rust book** — relevant sections on control flow, if any.
 
-## 13. What's next
+## 14. What's next
 
 - **Lesson 05** — Loops: `for`, `while`, `loop` (and the `break` value trick)
 - **Lesson 12** — `match`: the powerful version of `switch` (and a better alternative to long `else if` chains)
