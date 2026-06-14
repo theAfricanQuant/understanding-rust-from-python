@@ -18,7 +18,7 @@ A personal learning journal: **learning Rust from a Pythonista's perspective**, 
 
 ## Current state at a glance
 
-**Last updated:** 7th June, 2026
+**Last updated:** 14th June, 2026
 
 | Lesson | Topic | Status | Date completed |
 |---|---|---|---|
@@ -28,7 +28,7 @@ A personal learning journal: **learning Rust from a Pythonista's perspective**, 
 | 04 | If/else | ✅ done | 6th June, 2026 |
 | 05 | Loops | ✅ done | 7th June, 2026 |
 | 06 | Ownership & borrowing | ✅ done | 7th June, 2026 |
-| 07 | Structs & enums | ⬜ pending | — |
+| 07 | Structs & enums | ✅ done | 14th June, 2026 |
 | 08 | Error handling | ⬜ pending | — |
 
 **Detailed resume point** for any in-progress lesson: read `STATE.md` at the project root.
@@ -165,23 +165,20 @@ The user has bookmarked these Python→Rust resources. When writing or expanding
 
 ## Things to do next (priorities)
 
-### Immediate (finish lesson 03)
-
-- [ ] Write `notes/03_functions-quickref.md` (one-pager)
-- [ ] Add lesson 03 section to `learn-rust.qmd` (side-by-side)
-- [ ] Update `README.md` progress table — mark 03 done with `6th June, 2026`
-- [ ] Final commit + push for lesson 03
-
 ### Short term
 
-- [ ] Lesson 04: If/else (covers `match`, no truthy/falsy)
-- [ ] Lesson 05: Loops (for/while/loop, break value trick)
+- [ ] Lesson 08: Error handling (`Result<T,E>`, `?`, `panic!`, `unwrap`/`expect`, custom errors)
 
 ### Medium term
 
-- [ ] Lesson 06: Ownership & borrowing (the famous one)
-- [ ] Lesson 07: Structs & enums
-- [ ] Lesson 08: Error handling
+- [ ] Lesson 09: Strings (`String` vs `&str`, `format!`, common operations)
+- [ ] Lesson 10: Modules & crates (`mod`, `use`, `pub`, `crate::`, `super::`)
+
+### Long term / nice-to-have
+
+- [ ] Build a small project at the end of each lesson (real code, not exercises)
+- [ ] Add a "Common Python patterns in Rust" appendix — once enough lessons are done to see patterns
+- [ ] Add CI: GitHub Action to run `cargo test` on every push
 
 ### Long term / nice-to-have
 

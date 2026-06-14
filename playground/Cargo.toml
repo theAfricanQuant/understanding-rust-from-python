@@ -26,3 +26,7 @@ path = "src/bin/05_loops.rs"
 [[bin]]
 name = "06_ownership"
 path = "src/bin/06_ownership.rs"
+
+[[bin]]
+name = "07_structs_enums"
+path = "src/bin/07_structs_enums.rs"

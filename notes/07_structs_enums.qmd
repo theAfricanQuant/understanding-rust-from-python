@@ -1,0 +1,731 @@
+---
+title: "Lesson 07 — Structs & Enums"
+date_completed: 2026-06-14
+date_display: "14th June, 2026"
+---
+
+## What we're covering
+
+Rust's two main tools for modelling data:
+
+1. **Structs** — group related values into a single named type (like Python's `@dataclass`)
+2. **Enums** — define a type that can be ONE of several variants, each with different data (no Python equivalent — this is an *algebraic data type*)
+
+By the end you'll know:
+- The 3 kinds of structs (named, tuple, unit)
+- How `impl` blocks add methods to structs
+- How Rust enums carry data per variant
+- `match` — exhaustive pattern matching
+- `if let` — match for one pattern
+- `Option<T>` — the enum that replaces `None`
+- How ownership interacts with struct fields
+
+---
+
+## §1 Quick warm-up: Python structs
+
+Let's start where we're comfortable. In Python when you want to group data you reach for `@dataclass`:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Person:
+    name: str
+    age: int
+
+alice = Person(name="Alice", age=30)
+print(alice.name)  # "Alice"
+alice.age = 31     # mutation — no problem in Python
+```
+
+`@dataclass` gives you `__init__`, `__repr__`, and `__eq__` for free. Fields are public, mutable, and assignment is always a reference. The object lives on the heap, the garbage collector cleans it up.
+
+Rust's struct is shaped the same way but with two big differences:
+
+1. **Fields have explicit types** (Rust MUST know the size at compile time)
+2. **Methods are in separate `impl` blocks**, not inside the struct
+3. **Mutability is per-binding**, not per-field
+
+Here's the Rust equivalent:
+
+```rust
+#[derive(Debug)]  // like @dataclass's __repr__
+struct Person {
+    name: String,
+    age: u8,
+}
+
+let alice = Person { name: String::from("Alice"), age: 30 };
+println!("{:?}", alice);
+// alice.age = 31;  // ❌ ERROR: cannot assign because alice is not `mut`
+```
+
+Python's `alice.age = 31` always works. In Rust, you must declare `let mut alice` to get a mutable binding:
+
+```rust
+let mut bob = Person { name: String::from("Bob"), age: 25 };
+bob.age = 26;  // ✅ OK because `mut bob`
+```
+
+### Compiler error: assign to immutable
+
+If you try to mutate a non-`mut` struct:
+
+```
+error[E0594]: cannot assign to `alice.age`, as `alice` is not declared as mutable
+ --> src/main.rs:12:5
+  |
+11|     let alice = Person { name: String::from("Alice"), age: 30 };
+  |         ----- help: consider changing this to be mutable: `mut alice`
+12|     alice.age = 31;
+  |     ^^^^^^^^^^^^^^ cannot assign
+```
+
+**Mental shift:** In Python, everything is mutable by default (except tuples). In Rust, everything is **immutable by default**. You opt IN to mutability with `mut`. This is one of the most important habits to build.
+
+---
+
+## §2 The 3 kinds of structs
+
+Rust has three struct flavours. Python has equivalents for two of them.
+
+### Kind 1: Named-field struct
+
+The one you've seen — most common:
+
+```rust
+struct User {
+    username: String,
+    email: String,
+    sign_in_count: u64,
+    active: bool,
+}
+```
+
+Python: `@dataclass class User: ...`
+
+### Kind 2: Tuple struct
+
+Fields have types but NO names. Access by index (`.0`, `.1`, `.2`):
+
+```rust
+struct Color(u8, u8, u8);       // (r, g, b)
+struct Point(i32, i32);          // (x, y)
+
+let green = Color(0, 255, 0);
+println!("red={}, green={}, blue={}", green.0, green.1, green.2);
+
+let origin = Point(0, 0);
+println!("x={}, y={}", origin.0, origin.1);
+```
+
+Python: `NamedTuple`, or just a plain tuple.
+
+You can **destructure** tuple structs like tuples:
+
+```rust
+let Color(r, g, b) = green;
+println!("r={r}, g={g}, b={b}");
+```
+
+**When to use a tuple struct vs named-field struct?** Use a tuple struct when the field names would be redundant. `Color(255, 0, 0)` is cleaner than `Color { red: 255, green: 0, blue: 0 }`. But if you can't guess what each field means by position alone, use named fields.
+
+### Kind 3: Unit struct
+
+No fields at all. Just a type:
+
+```rust
+struct AlwaysEqual;
+
+let subject = AlwaysEqual;
+```
+
+Python: a class with `pass` and no `__init__`.
+
+Unit structs are useful as **type-level markers** — for traits, generics, and compile-time state. You'll see them when you get to `PhantomData` and trait implementations.
+
+---
+
+## §3 Struct update syntax
+
+Sometimes you want to copy most of a struct but override a few fields. Python has `dataclasses.replace()`:
+
+```python
+from dataclasses import replace
+order = replace(template, name="Hacker in Rust", count=1)
+```
+
+Rust has **struct update syntax** with `..`:
+
+```rust
+let template = Order {
+    name: String::from("Bob"),
+    year: 2019,
+    made_by_email: true,
+    count: 0,
+};
+
+let your_order = Order {
+    name: String::from("Hacker in Rust"),
+    count: 1,
+    ..template  // copy the rest
+};
+```
+
+**But there's a trap.** The `..` syntax *moves* heap-allocated fields. If `template.name` is a `String`, it gets moved into `your_order`. After that, `template` is partially invalidated — you can't use it anymore.
+
+```rust
+// println!("{template:?}");  // ❌ ERROR: template.name was moved
+```
+
+If ALL fields are `Copy` types (e.g., all `u32`, `bool`), then `template` stays valid. The rule is the same as we learned in lesson 06: heap types move, stack types copy.
+
+### Compiler error: partially moved value
+
+```
+error[E0382]: borrow of partially moved value: `template`
+ --> src/main.rs:24:22
+  |
+20|         ..template
+  |           -------- value partially moved here
+...
+24|     println!("{template:?}");
+  |               ^^^^^^^^^^^^^ value borrowed here after partial move
+```
+
+**Python parallel:** There's no Python equivalent for this error because Python never moves — it always shares references. The closest Python gotcha is this:
+
+```python
+template = Order(name="Bob", year=2019, made_by_email=True, count=0)
+your_order = template          # Python: shared reference!
+your_order.name = "Hacker in Rust"
+print(template.name)  # "Hacker in Rust" — surprised? Your template mutated!
+```
+
+Python silently mutates shared state. Rust prevents the problem entirely by making `..` a *move*, not a share.
+
+---
+
+## §4 Methods with `impl` blocks
+
+In Python, methods live inside the class body. In Rust, they live in separate `impl` blocks:
+
+```rust
+impl Rectangle {
+    // &self = borrowed read access (like Python's `self`)
+    fn area(&self) -> f64 {
+        self.width * self.height
+    }
+
+    // &mut self = borrowed write access
+    fn grow(&mut self, factor: f64) {
+        self.width *= factor;
+        self.height *= factor;
+    }
+
+    // self = takes ownership (rare — consumes the struct)
+    fn consume(self) -> (f64, f64) {
+        (self.width, self.height)
+    }
+
+    // No self = associated function (like Python's @classmethod)
+    fn square(side: f64) -> Self {
+        Self { width: side, height: side }  // Self = Rectangle
+    }
+}
+
+// Usage:
+let rect = Rectangle { width: 30.0, height: 50.0 };
+println!("area: {}", rect.area());        // method call
+
+let sq = Rectangle::square(5.0);          // associated function call
+println!("{:?}", sq);
+```
+
+### The `self` parameter cheat sheet
+
+| Signature | Called as | Gets | Can mutate fields? | Takes ownership? |
+|---|---|---|---|---|
+| `&self` | `rect.area()` | Read-only reference | ❌ | ❌ (borrows) |
+| `&mut self` | `rect.grow(2.0)` | Mutable reference | ✅ | ❌ (borrows mut) |
+| `self` | `rect.consume()` | Value (moved) | ✅ | ✅ (consumes) |
+| *(no self)* | `Rect::square(5.0)` | N/A | N/A | N/A |
+
+**Why separate `impl` blocks?** Because you can have *multiple* `impl` blocks for the same type. This is useful for grouping related methods or adding trait implementations. Also, it separates the *data* definition from the *behaviour* — the struct definition just says what fields exist; the impl blocks say what the type can do.
+
+**Python parallel:** You can't split methods across multiple class definitions in Python (well, you can with mixins or monkey-patching, but it's not idiomatic). Rust makes this a first-class feature.
+
+---
+
+## §5 Enums — the "aha!" moment
+
+Here's where Rust diverges sharply from Python. In Python, an enum is a set of named constants:
+
+```python
+from enum import Enum
+class Color(Enum):
+    RED = 1
+    GREEN = 2
+    BLUE = 3
+
+c = Color.RED  # that's it. Just a named integer.
+```
+
+Rust enums are **algebraic data types** (also called sum types, tagged unions, or discriminated unions). Each variant can hold DIFFERENT types and amounts of data:
+
+```rust
+enum Message {
+    Quit,                           // no data
+    Move { x: i32, y: i32 },        // named struct-like fields
+    Write(String),                  // single unnamed field
+    ChangeColor(u8, u8, u8),        // multiple unnamed fields (tuple variant)
+}
+```
+
+This single enum represents **four completely different shapes** of message, all under one type. You can't do this in Python's `Enum` — you'd need a class hierarchy with `isinstance()` checks.
+
+### Creating enum instances
+
+```rust
+let msg1 = Message::Quit;
+let msg2 = Message::Move { x: 10, y: 20 };
+let msg3 = Message::Write(String::from("hello"));
+let msg4 = Message::ChangeColor(255, 0, 128);
+```
+
+### Variant shapes
+
+| Shape | Write it like | Destructure like |
+|---|---|---|
+| No data | `Quit` | `Message::Quit =>` |
+| Named fields | `Move { x: 10, y: 20 }` | `Message::Move { x, y } =>` |
+| Unnamed (tuple) | `Write(String::from("hi"))` | `Message::Write(text) =>` |
+| Multiple unnamed | `ChangeColor(255, 0, 128)` | `Message::ChangeColor(r, g, b) =>` |
+
+---
+
+## §6 `match` — exhaustive pattern matching
+
+`match` is how you *extract* data from enums. It's like Python 3.10's `match` statement but **much stricter**:
+
+1. You MUST cover every variant (or use `_` wildcard). The compiler checks.
+2. Each arm is an **expression** — it returns a value.
+3. Variables in patterns are **bindings**, not comparisons.
+
+```rust
+#[derive(Debug)]
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState),
+}
+
+#[derive(Debug)]
+enum UsState {
+    Alabama,
+    Alaska,
+    California,
+}
+
+fn value_in_cents(coin: &Coin) -> u8 {
+    match coin {
+        Coin::Penny => {
+            println!("Lucky penny!");
+            1  // no semicolon = this is the returned value
+        }
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter(state) => {  // `state` binds to the inner UsState
+            println!("Quarter from {:?}!", state);
+            25
+        }
+    }
+}
+```
+
+### Compiler error: non-exhaustive patterns
+
+If you forget a variant:
+
+```
+error[E0004]: non-exhaustive patterns: `Quarter(_)` not covered
+ --> src/main.rs:15:11
+  |
+15|     match coin {
+  |           ^^^^ pattern `Quarter(_)` not covered
+```
+
+The compiler literally tells you what you forgot. This is **infinitely better than an `AttributeError: 'NoneType'` at 3am in production.**
+
+### The `_` wildcard
+
+If you don't care about the rest:
+
+```rust
+match coin {
+    Coin::Penny => 1,
+    _ => 99,  // catch-all
+}
+```
+
+### bindings vs comparisons
+
+This is a common confusion for Python devs. In Rust's `match`, variables are **bindings**, not comparisons:
+
+```rust
+let x = 5;
+match x {
+    1 => println!("one"),
+    y => println!("other: {y}"),  // y BINDS the value 5 — it's not a comparison!
+}
+// prints: "other: 5"
+```
+
+To actually compare against a variable, use a match guard:
+
+```rust
+let target = 5;
+let x = 3;
+match x {
+    v if v == target => println!("matched {target}"),
+    v => println!("other: {v}"),
+}
+```
+
+**Python parallel:** Python's `match` has similar guard clauses with `case ... if condition:`. But Python's `case` also does comparisons for literals and constant value patterns. Rust's `match` is purely structural — arms are patterns, not value comparisons.
+
+---
+
+## §7 `Option<T>` — the enum you'll use everywhere
+
+`Option<T>` is the most famous enum in Rust. It's defined (simplified) as:
+
+```rust
+enum Option<T> {
+    None,
+    Some(T),
+}
+```
+
+`T` is a generic type parameter (we'll cover generics properly in lesson 14). For now, think of `Option<i32>` as "either `None` or `Some(i32)`".
+
+### Why Option exists
+
+Python has `None`. Any Python variable can be `None` — the type checker can't enforce that you check for it:
+
+```python
+def divide(a: float, b: float) -> Optional[float]:
+    if b == 0:
+        return None
+    return a / b
+
+result = divide(10, 0)
+# result.bit_length()  # AttributeError: 'NoneType' object has no attribute 'bit_length'
+# Python: crashes at RUNTIME if you forget to check
+```
+
+Rust forces you to handle both cases:
+
+```rust
+fn divide(a: f64, b: f64) -> Option<f64> {
+    if b == 0.0 { None } else { Some(a / b) }
+}
+
+let result = divide(10.0, 2.0);
+// result + 1.0;  // ❌ ERROR: cannot add f64 to Option<f64>
+
+match result {
+    Some(v) => println!("{v}"),
+    None => println!("Cannot divide by zero"),
+}
+```
+
+### Useful Option methods
+
+| Method | What it does |
+|---|---|
+| `unwrap()` | Returns inner value, panics if `None` |
+| `expect("msg")` | Like `unwrap()` but with a custom panic message |
+| `unwrap_or(default)` | Returns inner value or `default` |
+| `unwrap_or_else(\| \| compute())` | Returns inner value or calls a closure |
+| `is_some()` / `is_none()` | Returns `bool` |
+| `map(\|v\| transform(v))` | Transforms inner value, stays `None` if `None` |
+| `and_then(\|v\| may_fail(v))` | Chain fallible operations |
+
+```rust
+let x: Option<i32> = Some(5);
+assert_eq!(x.unwrap_or(0), 5);
+
+let y: Option<i32> = None;
+assert_eq!(y.unwrap_or(0), 0);
+
+// x.map(|v| v * 2) == Some(10)
+// y.map(|v| v * 2) == None
+```
+
+---
+
+## §8 `if let` — match for one pattern
+
+When you only care about one variant and want a one-liner:
+
+```rust
+let config_max = Some(3u8);
+
+// Verbose:
+match config_max {
+    Some(max) => println!("max is {max}"),
+    _ => (),
+}
+
+// Clean:
+if let Some(max) = config_max {
+    println!("max is {max}");
+}
+```
+
+`if let` supports `else` too:
+
+```rust
+if let Some(v) = optional_value {
+    println!("got {v}");
+} else {
+    println!("got nothing");
+}
+```
+
+`if let` works with any enum, not just `Option`:
+
+```rust
+enum Status { Connected(String), Disconnected }
+
+let s = Status::Connected(String::from("localhost:8080"));
+if let Status::Connected(addr) = s {
+    println!("connected to {addr}");
+}
+```
+
+---
+
+## §9 Ownership inside structs and enums
+
+Everything we learned in lesson 06 applies inside structs and enums too.
+
+### Moving a struct moves all its heap data
+
+```rust
+#[derive(Debug)]
+struct Config {
+    host: String,
+    port: u16,
+}
+
+let cfg = Config { host: String::from("localhost"), port: 8080 };
+take_config(cfg);   // cfg is MOVED — gone
+// println!("{cfg:?}");  // ❌ ERROR: use of moved value
+```
+
+### Borrowing a struct lets you read fields, not take them
+
+```rust
+fn print_config(config: &Config) {
+    println!("{:?}", config);
+    // let h = config.host;  // ❌ ERROR: cannot move out of borrowed content
+    // You only have a &reference — you can't take ownership of host
+}
+```
+
+### Partial moves
+
+You can't move a single field out of a struct and keep using the rest:
+
+```rust
+let person = Person { name: String::from("Alice"), age: 30 };
+let name = person.name;  // moves name out
+// println!("{person:?}"); // ❌ ERROR: person is partially moved
+// println!("{person.age}"); // ❌ ERROR too — can't access partially moved struct
+```
+
+If you really need one field, destructure the whole thing:
+
+```rust
+let Person { name, .. } = person;  // whole struct consumed
+println!("{name}");
+```
+
+Or clone:
+
+```rust
+let name = person.name.clone();  // person stays valid
+println!("{name}, {}", person.age);
+```
+
+---
+
+## §10 The big picture: why enums are so important in Rust
+
+If you've come from Python, you might think "enums — those are just named constants, right?" Rust enums are fundamentally different. Here's why they matter:
+
+1. **Type-safe state machines** — An enum models "one of these states" with compile-time checking that you've handled every possible state. No more forgotten `elif` branches.
+
+2. **Error handling** — `Result<T, E>` is an enum: `Ok(T) | Err(E)`. We'll cover this in lesson 08.
+
+3. **Nullable types** — `Option<T>` is an enum. No null pointer exceptions ever.
+
+4. **No inheritance needed** — Where Python would use a class hierarchy + `isinstance()`, Rust uses an enum + `match`. The enum approach is flatter, more explicit, and the compiler checks exhaustiveness.
+
+5. **Memory efficiency** — An enum is only as large as its largest variant (plus a discriminant). No heap allocation overhead from class-based polymorphism.
+
+---
+
+## §11 Walkthrough: rustlings exercises
+
+Let's walk through the 3 structs exercises and 3 enums exercises from rustlings.
+
+### structs1 — Colour structs (3 kinds)
+
+The exercise asks you to define three structs: a regular struct with named fields, a tuple struct, and a unit struct.
+
+**Solution:**
+
+```rust
+struct ColorRegularStruct {
+    red: u8,
+    green: u8,
+    blue: u8,
+}
+
+struct ColorTupleStruct(u8, u8, u8);
+
+#[derive(Debug)]
+struct UnitStruct;
+
+let green = ColorRegularStruct { red: 0, green: 255, blue: 0 };
+let green = ColorTupleStruct(0, 255, 0);
+let unit_struct = UnitStruct;
+```
+
+Key takeaway: three different struct shapes, three different instantiation syntaxes.
+
+### structs2 — Struct update syntax
+
+You have a `create_order_template()` function and need to create your own order using `..` update syntax.
+
+**Solution:**
+
+```rust
+let your_order = Order {
+    name: String::from("Hacker in Rust"),
+    count: 1,
+    ..order_template
+};
+```
+
+All other fields come from `order_template`. The `String` field `name` is explicitly set (and the old one is moved), `count` is set, and the rest are filled from the template.
+
+### structs3 — Methods on structs
+
+This exercise has a `Package` struct with several methods to implement. `is_international()` should return `true` when sender_country != recipient_country, and `get_fees()` multiplies weight by cents_per_gram.
+
+**Solution:**
+
+```rust
+fn is_international(&self) -> bool {
+    self.sender_country != self.recipient_country
+}
+
+fn get_fees(&self, cents_per_gram: u32) -> u32 {
+    self.weight_in_grams * cents_per_gram
+}
+```
+
+Note the return types: `-> bool` and `-> u32`. Without a return type, Rust functions return `()`, which won't match the test expectations.
+
+### enums1 — Simple enum variants
+
+Define `enum Message` with variants `Quit`, `Echo`, `Move`, `ChangeColor`, and `Resize`.
+
+**Solution:**
+
+```rust
+enum Message {
+    Quit,
+    Echo,
+    Move,
+    ChangeColor,
+    Resize,
+}
+```
+
+All variants carry no data — simplest possible enum.
+
+### enums2 — Data-carrying enum variants
+
+Now each variant has different data. Define them with the right shapes.
+
+**Solution:**
+
+```rust
+enum Message {
+    Resize { width: u64, height: u64 },
+    Move(Point),
+    Echo(String),
+    ChangeColor(u8, u8, u8),
+    Quit,
+}
+```
+
+- `Resize` has named fields like a struct
+- `Move` wraps a single `Point` struct
+- `Echo` wraps a single `String`
+- `ChangeColor` has three unnamed fields
+- `Quit` has no data
+
+### enums3 — match on an enum
+
+The `process()` method receives a `Message` and should dispatch to the appropriate method on `State`. This is the classic enum-dispatch pattern.
+
+**Solution:**
+
+```rust
+fn process(&mut self, message: Message) {
+    match message {
+        Message::Resize { width, height } => self.resize(width, height),
+        Message::Move(point) => self.move_position(point),
+        Message::Echo(s) => self.echo(s),
+        Message::ChangeColor(r, g, b) => self.change_color(r, g, b),
+        Message::Quit => self.quit(),
+    }
+}
+```
+
+Each arm destructures the variant and passes the extracted data to the corresponding method. The `match` is exhaustive — if a new variant is added later, this won't compile until you handle it. That's the power.
+
+---
+
+## §12 Try it yourself
+
+1. **RGB colour struct** — Define a `struct Color { red: u8, green: u8, blue: u8 }`. Add a method `mix(&self, other: &Color) -> Color` that returns the average of the two colours. Then add an associated function `Color::red() -> Self` that returns `Color { red: 255, green: 0, blue: 0 }`.
+
+2. **Shipping calculator** — Define an enum `ShippingMethod` with variants `Standard`, `Express { guaranteed: bool }`, and `Overnight(String)` where the string is a tracking number. Write a function `cost(method: &ShippingMethod) -> u32` that returns 5 for Standard, 15 for Express, 25 for Overnight.
+
+3. **Traffic lights** — Define an enum `TrafficLight { Red, Yellow, Green }`. Write a function `next(&self) -> TrafficLight` that cycles: Red → Green → Yellow → Red. Then add a method `duration(&self) -> u8` returning 60 for Red, 5 for Yellow, 55 for Green.
+
+4. **Shape area** — Define an enum `Shape` with variants `Circle(f64)`, `Rectangle { width: f64, height: f64 }`, and `Triangle { base: f64, height: f64 }`. Write an `area(&self) -> f64` method using `match`.
+
+5. **unwrap_safe** — Write a function `unwrap_or_default<T: Default>(opt: Option<T>) -> T` that returns the inner value if `Some`, or `T::default()` if `None`. Test it with `Option<String>` (default is `""`) and `Option<i32>` (default is `0`).
+
+---
+
+## §13 What we'll build on in lesson 08
+
+Structs and enums aren't just about data modelling — they're the foundation for:
+
+- **Error handling (lesson 08):** `Result<T, E>` is an enum with `Ok(T)` and `Err(E)` variants
+- **Pattern matching depths:** Nested destructuring, match guards, `@` bindings
+- **Generics (lesson 14):** `Option<T>`, `Result<T, E>` — the `<T>` part
+- **Traits (lesson 15):** Implementing shared behaviour across different types
+
+You'll use structs and enums in **literally every Rust program you write**. If lesson 06 (ownership) is "how values flow through your program", this lesson is "how you give names and shapes to your data". Together they're the backbone of idiomatic Rust.
