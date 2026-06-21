@@ -1,0 +1,671 @@
+---
+title: "Lesson 08 — Error Handling"
+date_completed: 2026-06-21
+date_display: "21st June, 2026"
+---
+
+## What we're covering
+
+Rust's approach to errors — and why it will feel *completely different* from Python:
+
+1. **The mental shift** — Python throws, Rust returns
+2. **`panic!`** — for unrecoverable bugs (Python's `raise` but only for broken state)
+3. **`Result<T, E>`** — Rust's recoverable error enum (no Python equivalent in type system)
+4. **`match` on `Result`** — handling both `Ok` and `Err` exhaustively
+5. **`unwrap()` and `expect()`** — the escape hatches (and why they're code smells)
+6. **The `?` operator** — early return on error, Rust's most loved feature
+7. **Error propagation** — chaining fallible functions
+8. **Custom error types** — enums that wrap multiple error kinds
+9. **`From` conversions** — making `?` work across error types
+10. **`main()` returning `Result`** — quick prototyping with `?`
+11. **`panic!` vs `Result`** — when to use which
+
+By the end you'll know why Rust programmers say "errors are values, not exceptions" — and you'll never look at Python's `try`/`except` the same way again.
+
+---
+
+## §1 The big mental shift: throwing vs returning
+
+This is the single most important concept in this lesson. Read this section twice.
+
+### Python: exceptions are everywhere
+
+```python
+def divide(a: float, b: float) -> float:
+    return a / b  # might raise ZeroDivisionError — no hint in the signature
+
+# Caller's responsibility: remember to try/except
+try:
+    result = divide(10, 0)
+except ZeroDivisionError:
+    print("Oops")
+```
+
+Nothing about `def divide(...) -> float` tells you it can fail. The `ZeroDivisionError` is invisible. You find out at runtime. This is Python's **"ask forgiveness, not permission"** philosophy.
+
+### Rust: errors are return values
+
+```rust
+fn divide(a: f64, b: f64) -> Result<f64, String> {
+    if b == 0.0 {
+        Err(String::from("Division by zero"))
+    } else {
+        Ok(a / b)
+    }
+}
+```
+
+The return type `Result<f64, String>` SCREAMS "I can fail." The compiler enforces that callers handle both cases:
+
+```rust
+let result = divide(10.0, 0.0);
+// println!("{result}");  //  ❌ ERROR: `Result<f64, String>` doesn't implement `Display`
+// result + 1.0;          //  ❌ ERROR: cannot add `{integer}` to `Result<f64, String>`
+
+// You MUST unwrap the Result first:
+match result {
+    Ok(v) => println!("{v}"),
+    Err(e) => println!("Error: {e}"),
+}
+```
+
+**Mental shift:** In Python, you can ignore errors until the program crashes. In Rust, you **cannot** ignore errors — the type system won't compile your code until you handle both the happy path AND the error path. This is Rust's "make the error path a first-class citizen" philosophy.
+
+### Compiler error: using Result as the inner value
+
+If you try to use a `Result<T, E>` as if it were `T`:
+
+```
+error[E0369]: cannot add `{integer}` to `Result<f64, String>`
+ --> src/main.rs:8:5
+  |
+8 |     result + 1.0;
+  |     ------ ^ --- {integer}
+  |     |
+  |     Result<f64, String>
+```
+
+The fix: `match` on the result, or use `unwrap()`/`?`.
+
+---
+
+## §2 `panic!` — the "everything is broken" button
+
+`panic!` is Rust's version of raising an unrecoverable exception. But Rust devs use it *far* less than Python devs use `raise`.
+
+```rust
+fn main() {
+    panic!("crash and burn");
+    // Prints: thread 'main' panicked at src/main.rs:2:5:
+    // crash and burn
+    // note: run with `RUST_BACKTRACE=1` for a backtrace
+}
+```
+
+`panic!` is for **bugs**, not **expected errors**:
+
+| Situation | Python | Rust |
+|---|---|---|
+| File not found | `raise FileNotFoundError` | Return `Err(io::Error)` |
+| User input invalid | `raise ValueError` | Return `Err(ParseIntError)` |
+| Index out of bounds | `raise IndexError` | `panic!` (use `.get()` for safe access) |
+| Assertion failure | `assert x > 0` → `AssertionError` | `assert!(x > 0)` → `panic!` |
+
+**Python heuristic:** If you'd catch the exception with `try`/`except`, use `Result`. If you'd let it crash (AssertionError, out of bounds), use `panic!` (or better, use safe APIs like `.get()` that return `Option`).
+
+You CAN catch panics with `std::panic::catch_unwind()`, but this is rare — mostly for FFI boundaries and test harnesses. Normal application code should NEVER catch panics.
+
+---
+
+## §3 `Result<T, E>` — the enum that rules error handling
+
+`Result` is literally an enum. Its definition is (conceptually):
+
+```rust
+enum Result<T, E> {
+    Ok(T),   // success: contains the return value
+    Err(E),  // failure: contains the error
+}
+```
+
+Nothing magic. The same `match`, `if let`, and pattern matching you learned in lesson 07 apply here.
+
+```rust
+fn divide(a: f64, b: f64) -> Result<f64, String> {
+    if b == 0.0 {
+        Err(String::from("cannot divide by zero"))
+    } else {
+        Ok(a / b)
+    }
+}
+
+fn main() {
+    let result = divide(10.0, 2.0);
+    
+    // Pattern 1: match (most common for multi-step logic)
+    match result {
+        Ok(v) => println!("Result: {v}"),
+        Err(e) => println!("Error: {e}"),
+    }
+    
+    // Pattern 2: if let (when you only care about Ok)
+    if let Ok(v) = divide(10.0, 2.0) {
+        println!("Got: {v}");
+    }
+
+    // Pattern 3: ? operator (see §6)
+    let v: f64 = divide(10.0, 2.0)?;
+}
+```
+
+Result is generic — `Result<T, E>` works with any types:
+- `Result<(), String>` — operation with no return value, can fail with a string
+- `Result<i32, io::Error>` — returns an integer, can fail with an IO error
+- `Result<Vec<String>, MyError>` — returns a vector, can fail with custom error
+
+The `E` type must implement `std::fmt::Debug` and `std::fmt::Display` to be printed or used with `unwrap()`.
+
+---
+
+## §4 `unwrap()` and `expect()` — quick-and-dirty extraction
+
+When you just want the value and are willing to crash on error:
+
+```rust
+let ok_val: Result<i32, &str> = Ok(42);
+let n: i32 = ok_val.unwrap();           // 42
+
+let err_val: Result<i32, &str> = Err("boom");
+// let n = err_val.unwrap();            // PANICS:
+//   thread 'main' panicked at src/main.rs:42:17:
+//   called `Result::unwrap()` on an `Err` value: "boom"
+```
+
+`expect()` is `unwrap()` with a custom panic message:
+
+```rust
+let config = load_config().expect("config.toml must exist at startup");
+```
+
+**When to use `unwrap`/`expect`:**
+- Quick prototyping (you'll handle it properly later)
+- Tests — `unwrap()` in tests is idiomatic (it panics, which is a test failure)
+- Situations where failure is logically impossible (e.g., you just checked `is_ok()`)
+- At program startup (config files, DB connections — crash early if missing)
+
+**When NOT to use `unwrap`/`expect`:**
+- Library code (let the caller decide)
+- Any function where the caller could reasonably recover
+- Production code paths that handle user input or network calls
+
+Rust's `unwrap_or` family provides graceful fallbacks:
+
+```rust
+let err: Result<i32, &str> = Err("oops");
+
+err.unwrap_or(0);                              // 0 — immediate fallback
+err.unwrap_or_else(|e| e.len() as i32);        // 4 — lazy fallback
+err.unwrap_or_default();                       // 0 — if i32: Default = 0
+```
+
+Converting between Option and Result:
+
+```rust
+let opt: Option<i32> = None;
+let result: Result<i32, &str> = opt.ok_or("missing value");  // Err("missing value")
+
+let result: Result<i32, &str> = Ok(42);
+let opt: Option<i32> = result.ok();  // Some(42) — error info is discarded
+```
+
+---
+
+## §5 Graceful handling — the full toolkit
+
+Beyond `match` and `unwrap`, Rust gives you combinators for clean error handling:
+
+```rust
+let ok: Result<i32, &str> = Ok(7);
+let err: Result<i32, &str> = Err("oops");
+
+// Provide default values
+err.unwrap_or(0);                              // 0
+err.unwrap_or_else(|e| e.len() as i32);        // 4 (lazy computation)
+
+// Chain fallible operations
+err.or_else(|e| Ok(42));                       // Ok(42) — "try alternative"
+ok.and_then(|n| Ok(n * 2));                    // Ok(14) — "then do this on success"
+
+// Transform values
+ok.map(|n| n * 3);                             // Ok(21) — transform success value
+err.map_err(|e| format!("wrapped: {e}"));       // Err("wrapped: oops") — transform error
+
+// Boolean checks
+ok.is_ok();                                    // true
+err.is_err();                                  // true
+
+// Convert between Option and Result
+ok.ok();                                       // Some(7)
+opt.ok_or("missing");                          // Result<T, E>
+opt.ok_or_else(|| "missing");                  // lazy version
+```
+
+These are all methods on `Result<T, E>` — like Python's chained operations but with type safety.
+
+---
+
+## §6 The `?` operator — Rust's killer feature for error handling
+
+This is probably the feature that will make you fall in love with Rust error handling. `?` is syntactic sugar that says "if this is an error, return it immediately; otherwise give me the value."
+
+### Without `?` (the manual way)
+
+```rust
+fn read_username(path: &str) -> Result<String, io::Error> {
+    let file_result = File::open(path);
+    let mut file = match file_result {
+        Ok(f) => f,
+        Err(e) => return Err(e),  // propagate error manually
+    };
+    
+    let mut username = String::new();
+    match file.read_to_string(&mut username) {
+        Ok(_) => (),
+        Err(e) => return Err(e),  // propagate error again
+    };
+    
+    Ok(username)
+}
+```
+
+### With `?` (the clean way)
+
+```rust
+fn read_username(path: &str) -> Result<String, io::Error> {
+    let mut file = File::open(path)?;          // return Err on failure
+    let mut username = String::new();
+    file.read_to_string(&mut username)?;        // return Err on failure
+    Ok(username)
+}
+```
+
+Even shorter:
+
+```rust
+fn read_username(path: &str) -> Result<String, io::Error> {
+    let mut username = String::new();
+    File::open(path)?.read_to_string(&mut username)?;
+    Ok(username)
+}
+```
+
+Or using `std::fs::read_to_string`:
+
+```rust
+fn read_username(path: &str) -> Result<String, io::Error> {
+    fs::read_to_string(path)
+}
+```
+
+**What `?` actually expands to:**
+
+```rust
+let value = expr?;
+// becomes:
+let value = match expr {
+    Ok(v) => v,
+    Err(e) => return Err(e.into()),  // note the .into() — auto-conversion!
+};
+```
+
+Key details:
+- The `e.into()` call converts the error using the `From` trait — this is how `?` works across different error types (see §8)
+- `?` can only be used in functions that return `Result` (or `Option`)
+- `?` works on `Option<T>` too: `None?` returns `None` early from a function returning `Option<T>`
+
+**Python parallel:** The closest thing Python has is this (but it's not enforced):
+
+```python
+def read_username(path: str) -> tuple:
+    try:
+        with open(path) as f:
+            return f.read()
+    except OSError as e:
+        return None, e  # calling code must check for None manually
+```
+
+In Python, nothing forces you to return the error. In Rust, the type system handles it all.
+
+---
+
+## §7 Error propagation — chaining fallible functions
+
+The real power of `?` emerges when you chain multiple fallible operations. Each `?` propagates the error upward, and the types compose.
+
+```rust
+fn load_and_process(path: &str) -> Result<i32, io::Error> {
+    let content = fs::read_to_string(path)?;  // io::Error propagated
+    let trimmed = content.trim();
+    let num: i32 = trimmed.parse()?;          // Wait — ParseIntError != io::Error!
+    // This won't compile unless we handle the type mismatch!
+}
+```
+
+The problem: `fs::read_to_string` returns `io::Error`, but `trimmed.parse::<i32>()` returns `ParseIntError`. `?` can only propagate if the types match (or are convertible via `From`).
+
+Solutions in §8 (custom error types) and §9 (`From` conversions).
+
+---
+
+## §8 Custom error types — the enum approach
+
+When your function can fail in multiple ways, define an error enum:
+
+```rust
+#[derive(Debug)]
+enum DataError {
+    Io(std::io::Error),
+    Parse(std::num::ParseIntError),
+    Validation(String),
+}
+```
+
+Now implement the traits Rust needs:
+
+### 1. `Display` (required for printing)
+
+```rust
+impl std::fmt::Display for DataError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DataError::Io(e) => write!(f, "IO error: {e}"),
+            DataError::Parse(e) => write!(f, "Parse error: {e}"),
+            DataError::Validation(msg) => write!(f, "Validation error: {msg}"),
+        }
+    }
+}
+```
+
+### 2. `Error` (optional, enables `Box<dyn Error>` and `.source()`)
+
+```rust
+impl std::error::Error for DataError {}
+```
+
+This is a marker trait with default implementations. You don't need it for most code, but it's good practice.
+
+### 3. `From` conversions (enables `?` auto-conversion)
+
+```rust
+impl From<std::io::Error> for DataError {
+    fn from(e: std::io::Error) -> Self { DataError::Io(e) }
+}
+
+impl From<std::num::ParseIntError> for DataError {
+    fn from(e: std::num::ParseIntError) -> Self { DataError::Parse(e) }
+}
+```
+
+Now `?` works seamlessly:
+
+```rust
+fn load_and_process(path: &str) -> Result<i32, DataError> {
+    let content = fs::read_to_string(path)?;   // io::Error → DataError
+    let num: i32 = content.trim().parse()?;     // ParseIntError → DataError
+    Ok(num * 2)
+}
+```
+
+**This is the idiomatic Rust pattern.** You create a domain-specific error enum, implement `Display`, `Error`, and the necessary `From` impls, and then `?` just works everywhere.
+
+**Python parallel:**
+
+```python
+# Python: custom exception hierarchy
+class DataError(Exception):
+    pass
+
+class DataIOError(DataError):
+    def __init__(self, original: OSError):
+        self.original = original
+
+class DataParseError(DataError):
+    def __init__(self, original: ValueError):
+        self.original = original
+
+# No need for From impls — exceptions auto-convert in except blocks
+```
+
+---
+
+## §9 `map_err()` — inline error conversion
+
+When you don't want to implement `From` (one-off conversions, or third-party types), use `.map_err()`:
+
+```rust
+use std::fs;
+
+fn load_config() -> Result<String, String> {
+    fs::read_to_string("config.toml")
+        .map_err(|e| format!("Failed to read config: {e}"))
+}
+```
+
+`map_err(|e| ...)` transforms the error without touching the success value. It's like `map()` but operates on the `E` side instead of the `T` side.
+
+Without `map_err`:
+
+```rust
+fn load_config() -> Result<String, String> {
+    match fs::read_to_string("config.toml") {
+        Ok(content) => Ok(content),
+        Err(e) => Err(format!("Failed to read config: {e}")),
+    }
+}
+```
+
+`.map_err()` is cleaner for one-off conversions. For recurring conversions, implement `From` instead.
+
+---
+
+## §10 Using `?` in `main()`
+
+For quick scripts and prototypes, you can make `main()` return a `Result`:
+
+```rust
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let content = fs::read_to_string("config.toml")?;
+    println!("Config:\n{content}");
+    Ok(())
+}
+```
+
+- `Ok(())` = program succeeded → exit code 0
+- Returning `Err(e)` = program failed → prints the error and exits with code 1
+
+`Box<dyn Error>` is a "type-erased error" — any type that implements `std::error::Error` can be returned. This is useful for `main()` where you don't want to define a custom error type just for the entry point.
+
+**For library code, always use concrete error types** (your custom enum). `Box<dyn Error>` in `main()` is acceptable for simple binaries.
+
+---
+
+## §11 `panic!` vs `Result` — a decision framework
+
+Here's the heuristic Rust programmers use:
+
+| Use `panic!` | Use `Result<T, E>` |
+|---|---|
+| Programming error (bug) | Expected failure |
+| Invariant violation | User input error |
+| Out-of-bounds access | File not found |
+| Assertion failure | Network timeout |
+| "This should never happen" | Parse failure |
+| Test failures | DB connection failure |
+| Prototype code | Library public API |
+
+**Rule of thumb:** If the *caller* can reasonably recover from the error, use `Result`. If the error means the *program* is in a broken state, use `panic!`.
+
+### Safe APIs that avoid panic!
+
+Rust's standard library often provides both a panicking and a non-panicking version:
+
+```rust
+let v = vec![1, 2, 3];
+
+v[99];           // panic! — index out of bounds
+v.get(99);       // None    — safe access, returns Option<&i32>
+
+let n: i32 = "abc".parse().unwrap();  // panic! if parse fails
+let n: Result<i32, _> = "abc".parse(); // Err(ParseIntError)
+```
+
+The `get()` pattern is especially important: always prefer `.get()` over indexing unless you have already verified the index is in bounds.
+
+---
+
+## §12 Walkthrough: rustlings exercises
+
+The rustlings error handling exercises (`errors1.rs` through `errors6.rs`) take you from basic `unwrap` through custom error types.
+
+### errors1 — `unwrap` basics
+
+The exercise provides a `Option<String>` and asks you to get the value out. The test panics on `None`, so `unwrap()` is the expected answer:
+
+```rust
+pub fn generate_nametag_text(name: String) -> Result<String, String> {
+    if name.is_empty() {
+        Err("`name` was empty; it must be nonempty.".into())
+    } else {
+        Ok(format!("Hi! My name is {}", name))
+    }
+}
+```
+
+Then in `main`, you use `unwrap()` or `expect()` to extract the value:
+
+```rust
+let nametag = generate_nametag_text(name.into()).expect("name must not be empty");
+```
+
+### errors2 — `?` operator
+
+A function reads a file and returns `Result<String, io::Error>`. Replace manual `match` with `?`:
+
+```rust
+// Before:
+let mut file = match File::open(&q_path) {
+    Ok(file) => file,
+    Err(e) => return Err(e),
+};
+
+// After:
+let mut file = File::open(&q_path)?;
+```
+
+### errors3 — `?` in main
+
+`main()` returns `Result<(), ParseIntError>` and uses `?` to parse a number:
+
+```rust
+fn main() -> Result<(), ParseIntError> {
+    let mut tokens = 100;
+    let pretend_user_input = "8";
+    let cost = total_cost(pretend_user_input)?;
+
+    if cost > tokens {
+        println!("You can't afford that many!");
+    } else {
+        tokens -= cost;
+        println!("You now have {tokens} tokens.");
+    }
+    Ok(())
+}
+```
+
+### errors4 — multiple error types
+
+A function can fail with either a positive-number check or a parse error. The exercise teaches you to use `map_err` or `ok_or_else`:
+
+```rust
+impl PositiveNonzeroInteger {
+    fn new(value: i64) -> Result<PositiveNonzeroInteger, CreationError> {
+        if value < 0 {
+            Err(CreationError::Negative)
+        } else if value == 0 {
+            Err(CreationError::Zero)
+        } else {
+            Ok(PositiveNonzeroInteger(value as u64))
+        }
+    }
+    fn parse(s: &str) -> Result<PositiveNonzeroInteger, CreationError> {
+        let x: i64 = s.parse().map_err(|_| CreationError::Parse)?;
+        PositiveNonzeroInteger::new(x)
+    }
+}
+```
+
+### errors5 — combining error types
+
+This exercise makes you handle a chain where the inner and outer functions have different error types:
+
+```rust
+// Using map_err:
+let x: i64 = s.parse().map_err(|_| CreationError::Parse)?;
+
+// Using ok_or + and_then:
+s.parse().map_err(|_| CreationError::Parse).and_then(PositiveNonzeroInteger::new)
+
+// Using match:
+match s.parse() {
+    Ok(x) => PositiveNonzeroInteger::new(x),
+    Err(_) => Err(CreationError::Parse),
+}
+```
+
+### errors6 — custom errors with `From`
+
+Implement `From<ParseIntError>` and `From<io::Error>` for a custom error type:
+
+```rust
+enum ParseError {
+    Parse,
+    Io(io::Error),
+}
+
+impl From<io::Error> for ParseError {
+    fn from(e: io::Error) -> Self { ParseError::Io(e) }
+}
+
+impl From<num::ParseIntError> for ParseError {
+    fn from(e: num::ParseIntError) -> Self { ParseError::Parse }
+}
+```
+
+After implementing `From`, `?` automatically converts both error types to `ParseError`.
+
+---
+
+## §13 Try it yourself
+
+1. **Safe division** — Write a function `safe_divide(numerator: f64, denominator: f64) -> Result<f64, String>` that returns an error message if the denominator is zero. Then write a function that calls `safe_divide` three times with `?` and returns the sum of all three results.
+
+2. **Username validator** — Write a function `validate_username(name: &str) -> Result<String, String>` that returns an error if the name is: empty, longer than 20 chars, or contains spaces. Use it with `match` in `main()` to print either "Welcome, {name}" or a specific error message.
+
+3. **Custom error enum** — Define an enum `AppError` with variants `Io(io::Error)`, `Parse(ParseIntError)`, and `InvalidData(String)`. Implement `Display` and `From<io::Error>` and `From<ParseIntError>`. Write a function that reads a file containing a number, parses it, and returns double the value — all using `?` with your custom error type.
+
+4. **Chained operations** — Write a pipeline: read file → parse number → check if positive → multiply by 2. Each step returns `Result<T, AppError>`. Chain them all with `?`. Test with: a missing file, a file containing "hello", a file containing "-5", and a file containing "42".
+
+5. **unwrap_or vs match** — Write a function `get_port(config: Option<&str>) -> u16` that parses a port number from a string (like "8080"). If the string is missing or doesn't parse, return a default port. Use `unwrap_or` instead of `match`. Then rewrite it using `match` and compare which is cleaner in this case.
+
+---
+
+## §14 What we'll build on in lesson 09
+
+Error handling connects to almost everything in Rust:
+
+- **Strings (lesson 09):** `String` is used heavily in error messages. The `format!()` macro creates detailed error strings.
+- **Iterators (future):** Methods like `.collect::<Result<Vec<_>, _>>()` short-circuit on the first error.
+- **Traits (future):** The `From` trait is the key to `?` interoperability. You'll understand traits much better having already used them here.
+- **Generics (future):** `Result<T, E>` is generic over both `T` and `E` — the `<T, E>` syntax.
+
+You now know the 3 pillars of ownership (06), data modelling (07), and error handling (08). With these three, you can write real Rust programs. Everything from here builds on these foundations.

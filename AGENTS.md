@@ -18,7 +18,7 @@ A personal learning journal: **learning Rust from a Pythonista's perspective**, 
 
 ## Current state at a glance
 
-**Last updated:** 14th June, 2026
+**Last updated:** 21st June, 2026
 
 | Lesson | Topic | Status | Date completed |
 |---|---|---|---|
@@ -29,7 +29,7 @@ A personal learning journal: **learning Rust from a Pythonista's perspective**, 
 | 05 | Loops | ✅ done | 7th June, 2026 |
 | 06 | Ownership & borrowing | ✅ done | 7th June, 2026 |
 | 07 | Structs & enums | ✅ done | 14th June, 2026 |
-| 08 | Error handling | ⬜ pending | — |
+| 08 | Error handling | ✅ done | 21st June, 2026 |
 
 **Detailed resume point** for any in-progress lesson: read `STATE.md` at the project root.
 
@@ -167,7 +167,7 @@ The user has bookmarked these Python→Rust resources. When writing or expanding
 
 ### Short term
 
-- [ ] Lesson 08: Error handling (`Result<T,E>`, `?`, `panic!`, `unwrap`/`expect`, custom errors)
+- [ ] Lesson 09: Strings (`String` vs `&str`, `format!`, common operations)
 
 ### Medium term
 

@@ -30,3 +30,7 @@ path = "src/bin/06_ownership.rs"
 [[bin]]
 name = "07_structs_enums"
 path = "src/bin/07_structs_enums.rs"
+
+[[bin]]
+name = "08_error_handling"
+path = "src/bin/08_error_handling.rs"

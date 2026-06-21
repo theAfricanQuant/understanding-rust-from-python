@@ -43,7 +43,7 @@ uv run quarto render notes/XX_topic.qmd --to html
 | 05 | Loops (loop, while, for, break with value, labels) | 7th June, 2026 | ✅ done |
 | 06 | Ownership & borrowing (move, clone, copy, &, &mut, slices) | 7th June, 2026 | ✅ done |
 | 07 | Structs & enums (struct, impl, enum, match, Option, if let) | 14th June, 2026 | ✅ done |
-| 08 | Error handling | — | ⬜ pending |
+| 08 | Error handling | 21st June, 2026 | ✅ done |
 
 ## Why this exists
 
